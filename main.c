@@ -130,7 +130,7 @@ int main()
             if (myrpt->latch){
                 if (time_us_64() - my_c->hang_c <= 500){
                     sleep_ms(750);
-                    ids("...", 300 + myrpt->rssi*4);
+                    ids("...", 300 + myrpt->rssi*3);
                 }
                 if (time_us_64() - my_c->hang_c >= myrpt->hangTime){
                     id();

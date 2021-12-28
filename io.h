@@ -1,0 +1,10 @@
+#define COS 14
+#define CTCSS 15
+#define EXT_RX 13
+#define EXT_PTT 12
+#define RF_MUTE 11
+#define EXT_MUTE 10
+#define PTT 17
+#define PIP 16
+#define PTT_LED 25
+#define RSSI 26

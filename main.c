@@ -58,9 +58,8 @@ int main()
     myrpt->timeOut=TIMEOUT;
     my_c->latch_c=0;
 
-    uint64_t startTime = time_us_64();
-
-    //add_repeating_timer_ms(ID, id_time, NULL, NULL); // Setup the repeater ID timer
+    struct repeating_timer timer;
+    add_repeating_timer_ms(ID, id_time, NULL, &timer); // Setup ID timer
 
     gpio_init(COS);
     gpio_init(CTCSS);
@@ -99,11 +98,6 @@ int main()
             myrpt->rx = 1;
             myrpt->tx = 1;
             tx(1);
-            if(mustid){
-                id();
-                sleep_ms(1000);
-            }
-            myrpt->rssi = adc_read();
         }
 
         if (myrpt->rx && !myrpt->latch && my_c->latch_c == 0) // Start the latch timer
@@ -112,15 +106,19 @@ int main()
         if (myrpt->rx && time_us_64() - my_c->latch_c >= myrpt->latchTime && !myrpt->latch){ // If the user has latched
             myrpt->latch = 1;
             my_c->latch_c = 0;
+            if(mustid) // Check if we must ID
+                id();
         }
 
         if(!rx() && myrpt->rx){ // If valid signal has gone
             myrpt->rx = false;
         }
 
-        if (myrpt->rx && time_us_64() - my_c->sample_c >= myrpt->sampleTime){
+        if (myrpt->latch && myrpt->rx && time_us_64() - my_c->sample_c >= myrpt->sampleTime){
             my_c->sample_c = time_us_64();
             myrpt->rssi = adc_read();
+            if (mustid)
+                id();
         }
 
         if(!myrpt->rx && myrpt->tx){ // Start the hangtimer
@@ -130,7 +128,7 @@ int main()
             if (myrpt->latch){
                 if (time_us_64() - my_c->hang_c <= 500){
                     sleep_ms(750);
-                    ids("...", 300 + myrpt->rssi*3);
+                    ids("...", 300 + myrpt->rssi*4);
                 }
                 if (time_us_64() - my_c->hang_c >= myrpt->hangTime){
                     id();
@@ -142,6 +140,7 @@ int main()
                 }
             } else {
                 myrpt->tx = 0;
+                my_c->latch_c = 0;
                 tx(0);
             }
 

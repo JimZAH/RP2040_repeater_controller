@@ -28,7 +28,7 @@ bool rx()
     if (!gpio_get(COS))
         return true;
 #else
-    if (!gpio_get(COS))
+    if (gpio_get(COS))
         return true;
 #endif
     return false;

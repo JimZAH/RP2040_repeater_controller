@@ -1,5 +1,5 @@
 // ID
-#define dit 85
+#define dit 70
 #define dah dit*3
 #define space dah
 
@@ -11,6 +11,6 @@
 // Time
 #define HANGTIME 7000000ULL
 #define ID 600000
-#define LATCHTIME 3000000ULL
+#define LATCHTIME 2000000ULL
 #define SAMPLETIME 2000000ULL
 #define TIMEOUT 240000

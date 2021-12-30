@@ -1,3 +1,5 @@
+char* morse[6] = {"--.","-...","...--","...-",".--", "-.."};
+
 typedef struct counters{
     uint64_t hang_c;
     uint64_t latch_c;

@@ -6,7 +6,6 @@
 #include "io.h"
 #include "rpt.h"
 
-char* morse[6] = {"--.","-...","...--","...-",".--", "-.."};
 volatile bool mustid = false;
 
 bool id_time(struct repeating_timer *t){

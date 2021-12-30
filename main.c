@@ -33,7 +33,7 @@ void ids(char* s, int tone){
 }
 
 void idm(char c, int tone){
-  set_pwm_pin(16,tone,128);
+  set_pwm_pin(16,tone,1000);
   if (c == '.'){
     sleep_ms(dit);
   } else {

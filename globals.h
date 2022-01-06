@@ -2,6 +2,7 @@
 #define dit 70
 #define dah dit*3
 #define space dah
+char* morse[6] = {"--.","-...","...--","...-",".--", "-.."};
 
 
 // IO

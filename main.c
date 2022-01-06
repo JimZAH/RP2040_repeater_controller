@@ -45,7 +45,6 @@ void idm(char c, int tone){
 
 int main()
 {
-    tx(false);
     counter Rpt_c;
     counter *my_c = &Rpt_c;
     rpt Rpt;
@@ -60,35 +59,18 @@ int main()
     struct repeating_timer timer;
     add_repeating_timer_ms(ID, id_time, NULL, &timer); // Setup ID timer
 
-    gpio_init(COS);
-    gpio_init(CTCSS);
-    gpio_init(EXT_RX);
-    gpio_init(EXT_PTT);
-    gpio_init(RF_MUTE);
-    gpio_init(EXT_MUTE);
-    gpio_init(PTT);
-    gpio_init(PIP);
-    gpio_init(PTT_LED);
-    gpio_init(RSSI);
+    for (int i = 0; i < sizeof(pins)/2; i++){
+        gpio_init(pins[i]);
+    }
 
-    gpio_set_dir(COS, GPIO_IN);
-    gpio_set_dir(CTCSS, GPIO_IN);
-    gpio_set_dir(EXT_RX, GPIO_IN);
-    gpio_set_dir(EXT_PTT, GPIO_OUT);
-    gpio_set_dir(RF_MUTE, GPIO_OUT);
-    gpio_set_dir(EXT_MUTE, GPIO_OUT);
-    gpio_set_dir(PTT, GPIO_OUT);
-    gpio_set_dir(PIP, GPIO_OUT);
-    gpio_set_dir(PTT_LED, GPIO_OUT);
-    gpio_set_dir(RSSI, GPIO_IN);
+    for (int i = 0; i < sizeof(dir)/2; i++){
+        gpio_set_dir(dir[i][0], dir[i][1]);
+    }
 
     adc_init();
     adc_gpio_init(RSSI);
     adc_select_input(0);
 
-    tx(1);
-    sleep_ms(500);
-    tx(0);
 
     while (1){
         if (rx() && !myrpt->rx){ // If a valid signal is present on input

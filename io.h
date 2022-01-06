@@ -8,3 +8,29 @@
 #define PIP 16
 #define PTT_LED 25
 #define RSSI 26
+
+int pins[10] = {
+    COS,
+    CTCSS,
+    EXT_RX,
+    EXT_PTT,
+    RF_MUTE,
+    EXT_MUTE,
+    PTT,
+    PIP,
+    PTT_LED,
+    RSSI
+};
+
+int dir[10][2] = {
+    {COS, GPIO_IN},
+    {CTCSS, GPIO_IN},
+    {EXT_RX, GPIO_IN},
+    {EXT_PTT, GPIO_OUT},
+    {EXT_MUTE, GPIO_OUT},
+    {RF_MUTE, GPIO_OUT},
+    {PTT, GPIO_OUT},
+    {PIP, GPIO_OUT},
+    {PTT_LED, GPIO_OUT},
+    {RSSI, GPIO_IN}
+};

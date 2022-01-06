@@ -22,7 +22,7 @@ int pins_num[10] = {
     RSSI
 };
 
-int dir_num[10][2] = {
+int dir_num[10][1] = {
     {COS, GPIO_IN},
     {CTCSS, GPIO_IN},
     {EXT_RX, GPIO_IN},

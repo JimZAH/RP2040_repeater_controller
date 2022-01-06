@@ -12,8 +12,13 @@ bool id_time(struct repeating_timer *t){
     return true;
 }
 
-void id(){
+void id(rpt *myrpt){
     mustid = false;
+    if (!myrpt->tx){
+        tx(1);
+        sleep_ms(500);
+        myrpt->tx = 1;
+    }
     for (int i=0; i < sizeof(morse) / sizeof(morse[0]); i++){
     if (i > 4){
       sleep_ms(space*2);
@@ -44,6 +49,8 @@ void idm(char c, int tone){
 
 int main()
 {
+    rfMute(1);
+    extMute(1);
     counter Rpt_c;
     counter *my_c = &Rpt_c;
     rpt Rpt;
@@ -58,13 +65,34 @@ int main()
     struct repeating_timer timer;
     add_repeating_timer_ms(ID, id_time, NULL, &timer); // Setup ID timer
 
-    for (int i = 0; i < sizeof(pins_num)/2; i++){
-        gpio_init(pins_num[i]);
-    }
+   // for (int i = 0; i < sizeof(pins_num); i++){
+   //     gpio_init(pins_num[i]);
+   // }
 
-    for (int i = 0; i < sizeof(dir_num)/2; i++){
-        gpio_set_dir(dir_num[i][0], dir_num[i][1]);
-    }
+   // for (int i = 0; i < sizeof(dir_num); i++){
+   //     gpio_set_dir(dir_num[i][0], dir_num[i][1]);
+   // }
+    gpio_init(COS);
+    gpio_init(CTCSS);
+    gpio_init(EXT_RX);
+    gpio_init(EXT_PTT);
+    gpio_init(RF_MUTE);
+    gpio_init(EXT_MUTE);
+    gpio_init(PTT);
+    gpio_init(PIP);
+    gpio_init(PTT_LED);
+    gpio_init(RSSI);
+    gpio_set_dir(COS, GPIO_IN);
+    gpio_set_dir(CTCSS, GPIO_IN);
+    gpio_set_dir(EXT_RX, GPIO_IN);
+    gpio_set_dir(EXT_PTT, GPIO_OUT);
+    gpio_set_dir(RF_MUTE, GPIO_OUT);
+    gpio_set_dir(EXT_MUTE, GPIO_OUT);
+    gpio_set_dir(PTT, GPIO_OUT);
+    gpio_set_dir(PIP, GPIO_OUT);
+    gpio_set_dir(PTT_LED, GPIO_OUT);
+    gpio_set_dir(RSSI, GPIO_IN);
+
 
     adc_init();
     adc_gpio_init(RSSI);
@@ -78,6 +106,7 @@ int main()
             myrpt->rx = 1;
             myrpt->tx = 1;
             tx(1);
+            rfMute(0);
         }
 
         if (myrpt->rx && !myrpt->latch && my_c->latch_c == 0) // Start the latch timer
@@ -86,19 +115,16 @@ int main()
         if (myrpt->rx && time_us_64() - my_c->latch_c >= myrpt->latchTime && !myrpt->latch){ // If the user has latched
             myrpt->latch = 1;
             my_c->latch_c = 0;
-            if(mustid) // Check if we must ID
-                id();
         }
 
         if(!rx() && myrpt->rx){ // If valid signal has gone
             myrpt->rx = false;
+            rfMute(1);
         }
 
         if (myrpt->latch && myrpt->rx && time_us_64() - my_c->sample_c >= myrpt->sampleTime){
             my_c->sample_c = time_us_64();
             myrpt->rssi = adc_read();
-            if (mustid)
-                id();
         }
 
         if(!myrpt->rx && myrpt->tx){ // Start the hangtimer
@@ -108,12 +134,21 @@ int main()
             if (myrpt->latch){
                 if (time_us_64() - my_c->hang_c <= 500){
                     sleep_ms(750);
-                    ids("...", 300 + myrpt->rssi*4);
+                    if (myrpt->rssi >= RSSI_HIGH){
+                        ids("....", 1240);
+                    } else if (myrpt->rssi <= RSSI_LOW){
+                        ids("..", 1240);
+                    } else {
+                        ids("...", 1240);
+                    }
                 }
                 if (time_us_64() - my_c->hang_c >= myrpt->hangTime){
+
+#ifdef CLOSE_DOWN_ID
                     id();
                     if(rx())
                         continue;
+#endif
                     myrpt->tx = 0;
                     myrpt->latch = 0;
                     tx(0);
@@ -125,7 +160,13 @@ int main()
             }
 
         }
-
+#ifdef BEACON_ID
+        if(mustid) // Check if we must ID
+            id(myrpt);
+#else
+        if(mustid && myrpt->tx) // Check if we must ID and in transmit mode
+            id(myrpt);
+#endif
     }
     return 0;
 }

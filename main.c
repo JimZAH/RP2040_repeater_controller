@@ -3,7 +3,6 @@
 #include "hardware/adc.h"
 #include "globals.h"
 #include "io.c"
-#include "io.h"
 #include "rpt.h"
 
 volatile bool mustid = false;
@@ -59,12 +58,12 @@ int main()
     struct repeating_timer timer;
     add_repeating_timer_ms(ID, id_time, NULL, &timer); // Setup ID timer
 
-    for (int i = 0; i < sizeof(pins)/2; i++){
-        gpio_init(pins[i]);
+    for (int i = 0; i < sizeof(pins_num)/2; i++){
+        gpio_init(pins_num[i]);
     }
 
-    for (int i = 0; i < sizeof(dir)/2; i++){
-        gpio_set_dir(dir[i][0], dir[i][1]);
+    for (int i = 0; i < sizeof(dir_num)/2; i++){
+        gpio_set_dir(dir_num[i][0], dir_num[i][1]);
     }
 
     adc_init();

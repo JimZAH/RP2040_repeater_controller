@@ -9,7 +9,7 @@
 #define PTT_LED 25
 #define RSSI 26
 
-int pins[10] = {
+int pins_num[10] = {
     COS,
     CTCSS,
     EXT_RX,
@@ -22,7 +22,7 @@ int pins[10] = {
     RSSI
 };
 
-int dir[10][2] = {
+int dir_num[10][2] = {
     {COS, GPIO_IN},
     {CTCSS, GPIO_IN},
     {EXT_RX, GPIO_IN},

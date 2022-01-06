@@ -1,24 +1,68 @@
-#include <stdio.h>
-#include "pico/stdlib.h"
 #include "hardware/pwm.h"
 #include "hardware/clocks.h"
 #include "io.h"
-#include "globals.h"
+
+
+
+void extMute(bool state)
+{
+#ifdef EXT_MUTE_INVERT
+    if (state)
+        gpio_put(EXT_MUTE, true);
+        else
+        gpio_put(EXT_MUTE, false);
+#else
+    if (state)
+        gpio_put(EXT_MUTE, false);
+        else
+        gpio_put(EXT_MUTE, true);
+#endif
+}
+
+void extPtt(bool state)
+{
+#ifdef EXT_PTT_INVERT
+    if (state)
+        gpio_put(EXT_PTT, true);
+        else
+        gpio_put(EXT_PTT, false);
+#else
+    if (state)
+        gpio_put(EXT_PTT, false);
+        else
+        gpio_put(EXT_PTT, true);
+#endif
+}
 
 void tx(bool state)
 {
 #ifdef PTT_INVERT
     if (state){
-        gpio_put(17, true);
+        gpio_put(PTT, true);
         } else {
-        gpio_put(17, false);
+        gpio_put(PTT, false);
         }
 #else
     if (state){
-        gpio_put(17, false);
+        gpio_put(PTT, false);
        } else {
-        gpio_put(17, true);
+        gpio_put(PTT, true);
       }
+#endif
+}
+
+void rfMute(bool state)
+{
+#ifdef RF_MUTE_INVERT
+    if (state)
+        gpio_put(RF_MUTE, true);
+        else
+        gpio_put(RF_MUTE, false);
+#else
+    if (state)
+        gpio_put(RF_MUTE, false);
+        else
+        gpio_put(RF_MUTE, true);
 #endif
 }
 

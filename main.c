@@ -75,35 +75,13 @@ int main()
     struct repeating_timer timer;
     add_repeating_timer_ms(ID, id_time, NULL, &timer); // Setup ID timer
 
-   // for (int i = 0; i < sizeof(pins_num); i++){
-   //     gpio_init(pins_num[i]);
-   // }
-
-   // for (int i = 0; i < sizeof(dir_num); i++){
-   //     gpio_set_dir(dir_num[i][0], dir_num[i][1]);
-   // }
-
-    gpio_init(COS);
-    gpio_init(CTCSS);
-    gpio_init(EXT_RX);
-    gpio_init(EXT_PTT);
-    gpio_init(RF_MUTE);
-    gpio_init(EXT_MUTE);
-    gpio_init(PTT);
-    gpio_init(PIP);
-    gpio_init(PTT_LED);
-    gpio_init(RSSI);
-    gpio_set_dir(COS, GPIO_IN);
-    gpio_set_dir(CTCSS, GPIO_IN);
-    gpio_set_dir(EXT_RX, GPIO_IN);
-    gpio_set_dir(EXT_PTT, GPIO_OUT);
-    gpio_set_dir(RF_MUTE, GPIO_OUT);
-    gpio_set_dir(EXT_MUTE, GPIO_OUT);
-    gpio_set_dir(PTT, GPIO_OUT);
-    gpio_set_dir(PIP, GPIO_OUT);
-    gpio_set_dir(PTT_LED, GPIO_OUT);
-    gpio_set_dir(RSSI, GPIO_IN);
-
+    for (int i = 0; i <= sizeof(pins_num)/sizeof(pins_num[0]); i++){
+        gpio_init(pins_num[i]);
+    }
+    
+    for (int i = 0; i <= sizeof(dir_num)/sizeof(dir_num[0]); i++){
+        gpio_set_dir(dir_num[i][0], dir_num[i][1]);
+    }
 
     adc_init();
     adc_gpio_init(RSSI);

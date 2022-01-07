@@ -15,8 +15,7 @@ bool id_time(struct repeating_timer *t){
 void id(rpt *myrpt){
     mustid = false;
     if (!myrpt->tx){
-        myrpt->tx = 1;
-        tx(myrpt->tx);
+        tx(myrpt->tx = 1);
         sleep_ms(500);
     }
     for (int i=0; i < sizeof(morse) / sizeof(morse[0]); i++){
@@ -93,8 +92,7 @@ int main()
             my_c->hang_c = 0;
             my_c->sample_c = time_us_64();
             myrpt->rx = 1;
-            myrpt->tx = 1;
-            tx(myrpt->tx);
+            tx(myrpt->tx = 1);
             rfMute(0);
         }
 
@@ -132,14 +130,12 @@ int main()
                     if(rx())
                         continue;
 #endif
-                    myrpt->tx = 0;
                     myrpt->latch = 0;
-                    tx(myrpt->tx);
+                    tx(myrpt->tx = 0);
                 }
             } else {
-                myrpt->tx = 0;
                 my_c->latch_c = 0;
-                tx(myrpt->tx);
+                tx(myrpt->tx = 0);
             }
 
         }

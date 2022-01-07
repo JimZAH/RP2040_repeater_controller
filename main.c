@@ -15,9 +15,9 @@ bool id_time(struct repeating_timer *t){
 void id(rpt *myrpt){
     mustid = false;
     if (!myrpt->tx){
-        tx(1);
-        sleep_ms(500);
         myrpt->tx = 1;
+        tx(myrpt->tx);
+        sleep_ms(500);
     }
     for (int i=0; i < sizeof(morse) / sizeof(morse[0]); i++){
     if (i > 4){
@@ -52,9 +52,9 @@ char* reportRSSI(rpt *myrpt){
         return '....';
     if (myrpt->rssi <= RSSI_LOW) {
         return '..';
-    return '...';
         }
     }
+    return '...';
 }
 
 int main()
@@ -116,7 +116,7 @@ int main()
             my_c->sample_c = time_us_64();
             myrpt->rx = 1;
             myrpt->tx = 1;
-            tx(1);
+            tx(myrpt->tx);
             rfMute(0);
         }
 

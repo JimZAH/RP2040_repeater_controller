@@ -47,6 +47,16 @@ void idm(char c, int tone){
   sleep_ms(dit);
 }
 
+char* reportRSSI(rpt *myrpt){
+    if (myrpt->rssi >= RSSI_HIGH) {
+        return '....';
+    if (myrpt->rssi <= RSSI_LOW) {
+        return '..';
+    return '...';
+        }
+    }
+}
+
 int main()
 {
     rfMute(1);
@@ -72,6 +82,7 @@ int main()
    // for (int i = 0; i < sizeof(dir_num); i++){
    //     gpio_set_dir(dir_num[i][0], dir_num[i][1]);
    // }
+
     gpio_init(COS);
     gpio_init(CTCSS);
     gpio_init(EXT_RX);
@@ -134,29 +145,23 @@ int main()
             if (myrpt->latch){
                 if (time_us_64() - my_c->hang_c <= 500){
                     sleep_ms(750);
-                    if (myrpt->rssi >= RSSI_HIGH){
-                        ids("....", 1240);
-                    } else if (myrpt->rssi <= RSSI_LOW){
-                        ids("..", 1240);
-                    } else {
-                        ids("...", 1240);
-                    }
+                    ids(reportRSSI(myrpt), 1240);
                 }
                 if (time_us_64() - my_c->hang_c >= myrpt->hangTime){
 
 #ifdef CLOSE_DOWN_ID
-                    id();
+                    id(myrpt);
                     if(rx())
                         continue;
 #endif
                     myrpt->tx = 0;
                     myrpt->latch = 0;
-                    tx(0);
+                    tx(myrpt->tx);
                 }
             } else {
                 myrpt->tx = 0;
                 my_c->latch_c = 0;
-                tx(0);
+                tx(myrpt->tx);
             }
 
         }

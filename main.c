@@ -49,12 +49,12 @@ void idm(char c, int tone){
 
 char* reportRSSI(rpt *myrpt){
     if (myrpt->rssi >= RSSI_HIGH) {
-        return '....';
+        return "....";
     if (myrpt->rssi <= RSSI_LOW) {
-        return '..';
+        return "..";
         }
     }
-    return '...';
+    return "...";
 }
 
 int main()

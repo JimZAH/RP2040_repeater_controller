@@ -1,6 +1,9 @@
 // ID
 #define BEACON_ID //Uncomment to enable BEACON ID
-//#define CLOSE_DOWN_ID //Uncomment to enable ID on closedown
+#define CLOSE_DOWN_ID //Uncomment to enable ID on closedown
+#define COURTESY_TONE_FREQ 1240
+#define CW_BEACON_FREQ 2100 //CW tone frequency for periodic beacon
+#define CW_CLOSEDOWN_FREQ 1240 //CW tone frequency for closedown ID
 #define dit 70
 #define dah dit*3
 #define space dah
@@ -18,8 +21,8 @@ char* morse[6] = {"--.","-...","...--","...-",".--", "-.."};
 #define RSSI_HIGH 440 // RSSI HIGH SIGNAL
 
 // Time
-#define HANGTIME 7000000ULL
+#define HANGTIME 8000000ULL
 #define ID 900000
-#define LATCHTIME 1000000ULL
+#define LATCHTIME 2000000ULL
 #define SAMPLETIME 2000000ULL
 #define TIMEOUT 240000

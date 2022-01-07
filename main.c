@@ -22,8 +22,9 @@ void id(rpt *myrpt){
     if (i > 4){
       sleep_ms(space*2);
         }
-     ids(morse[i], 2100);
+     ids(morse[i], myrpt->cw_freq);
     }
+    myrpt->cw_freq=CW_BEACON_FREQ;
 }
 
 void ids(char* s, int tone){
@@ -65,6 +66,8 @@ int main()
     rpt Rpt;
     rpt *myrpt = &Rpt;
 
+    myrpt->courtesy_freq=COURTESY_TONE_FREQ;
+    myrpt->cw_freq=CW_BEACON_FREQ;
     myrpt->hangTime=HANGTIME;
     myrpt->latchTime=LATCHTIME;
     myrpt->sampleTime=SAMPLETIME;
@@ -121,23 +124,22 @@ int main()
             if (myrpt->latch){
                 if (time_us_64() - my_c->hang_c <= 500){
                     sleep_ms(750);
-                    ids(reportRSSI(myrpt), 1240);
+                    ids(reportRSSI(myrpt), myrpt->courtesy_freq);
                 }
                 if (time_us_64() - my_c->hang_c >= myrpt->hangTime){
-
 #ifdef CLOSE_DOWN_ID
+                    myrpt->cw_freq=CW_CLOSEDOWN_FREQ;
                     id(myrpt);
                     if(rx())
                         continue;
 #endif
                     myrpt->latch = 0;
-                    tx(myrpt->tx = 0);
                 }
             } else {
+                sleep_ms(100);
                 my_c->latch_c = 0;
                 tx(myrpt->tx = 0);
             }
-
         }
 #ifdef BEACON_ID
         if(mustid) // Check if we must ID

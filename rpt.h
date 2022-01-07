@@ -7,6 +7,8 @@ typedef struct counters{
 
 
 typedef struct repeater{
+    uint courtesy_freq;
+    uint cw_freq;
     bool ext_rx;
     bool ext_tx;
     uint64_t hangTime;

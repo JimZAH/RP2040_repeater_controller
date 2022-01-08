@@ -3,7 +3,7 @@
 #define CLOSE_DOWN_ID //Uncomment to enable ID on closedown
 #define COURTESY_TONE_FREQ 1240
 #define CW_BEACON_FREQ 2100 //CW tone frequency for periodic beacon
-#define CW_CLOSEDOWN_FREQ 1240 //CW tone frequency for closedown ID
+#define CW_CLOSEDOWN_FREQ 1900 //CW tone frequency for closedown ID
 #define dit 70
 #define dah dit*3
 #define space dah

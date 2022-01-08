@@ -30,8 +30,9 @@ void id(rpt *myrpt){
 void ids(char* s, int tone){
   int j = 0;
   while (s[j] != NULL){
-    idm(s[j], tone);
-    j++;
+      rfMute(!rx()); // Unmute the audio path if we are receiving.
+      idm(s[j], tone);
+      j++;
   }
   sleep_ms(dit*2);
 }
@@ -137,7 +138,7 @@ int main()
                     myrpt->latch = 0;
                 }
             } else {
-                sleep_ms(100);
+                sleep_ms(250);
                 my_c->latch_c = 0;
                 tx(myrpt->tx = 0);
             }

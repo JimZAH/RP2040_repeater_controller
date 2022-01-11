@@ -73,6 +73,7 @@ int main()
     myrpt->latchTime=LATCHTIME;
     myrpt->sampleTime=SAMPLETIME;
     myrpt->timeOut=TIMEOUT;
+    myrpt->tt = 0;
     myrpt->tx = 0;
     my_c->latch_c=0;
 

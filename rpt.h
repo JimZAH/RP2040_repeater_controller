@@ -17,6 +17,7 @@ typedef struct repeater{
     bool rx;
     uint16_t rssi;
     uint64_t sampleTime;
+    bool tt;
     bool tx;
     uint64_t timeOut;
     bool timedOut;

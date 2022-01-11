@@ -1,7 +1,7 @@
 // ID
 #define BEACON_ID //Uncomment to enable BEACON ID
 #define CLOSE_DOWN_ID //Uncomment to enable ID on closedown
-#define COURTESY_TONE_FREQ 1240
+#define COURTESY_TONE_FREQ 1900
 #define CW_BEACON_FREQ 2100 //CW tone frequency for periodic beacon
 #define CW_CLOSEDOWN_FREQ 1900 //CW tone frequency for closedown ID
 #define dit 70

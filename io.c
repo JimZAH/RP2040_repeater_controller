@@ -34,6 +34,18 @@ void extPtt(bool state)
 #endif
 }
 
+bool extRx()
+{
+#ifdef EXT_RX_INVERT
+    if (!gpio_get(EXT_RX))
+        return true;
+#else
+    if (gpio_get(EXT_RX))
+        return true;
+#endif
+    return false;
+}
+
 void tx(bool state)
 {
 #ifdef PTT_INVERT

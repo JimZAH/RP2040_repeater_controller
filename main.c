@@ -3,7 +3,7 @@
 #include "hardware/adc.h"
 #include "globals.h"
 #include "io.c"
-#include "rpt.h"
+#include "rpt.c"
 
 volatile bool mustid = false;
 
@@ -48,14 +48,23 @@ void idm(char c, int tone){
   sleep_ms(dit);
 }
 
-char* reportRSSI(rpt *myrpt){
-    if (myrpt->rssi >= RSSI_HIGH) {
-        return "....";
-    if (myrpt->rssi <= RSSI_LOW) {
-        return "..";
-        }
+char* overTone(rpt *myrpt){
+
+    switch(myrpt->receiverId){
+        case 1:
+            if (myrpt->rssi >= RSSI_HIGH) {
+              return "....";
+            if (myrpt->rssi <= RSSI_LOW) {
+              return "..";
+              }
+            }
+            return "...";
+        case 2:
+            return "-.-";
+        default:
+            return ".";
     }
-    return "...";
+    
 }
 
 int main()
@@ -94,10 +103,10 @@ int main()
 
 
     while (1){
-        if (rx() && !myrpt->rx){ // If a valid signal is present on input
+        if (myrpt->rx && !myrpt->tt){ // If a valid signal is present on input
             my_c->hang_c = 0;
             my_c->sample_c = time_us_64();
-            myrpt->rx = 1;
+            myrpt->tt = 1;
             tx(myrpt->tx = 1);
             rfMute(0);
         }
@@ -110,8 +119,8 @@ int main()
             my_c->latch_c = 0;
         }
 
-        if(!rx() && myrpt->rx){ // If valid signal has gone
-            myrpt->rx = false;
+        if(!myrpt->rx && myrpt->tt){ // If valid signal has gone
+            myrpt->tt = 0;
             rfMute(1);
         }
 
@@ -120,14 +129,14 @@ int main()
             myrpt->rssi = adc_read();
         }
 
-        if(!myrpt->rx && myrpt->tx){ // Start the hangtimer
+        if(!myrpt->tt && myrpt->tx){ // Start the hangtimer
             if (my_c->hang_c == 0)
                 my_c->hang_c=time_us_64();
 
             if (myrpt->latch){
                 if (time_us_64() - my_c->hang_c <= 500){
                     sleep_ms(750);
-                    ids(reportRSSI(myrpt), myrpt->courtesy_freq);
+                    ids(overTone(myrpt), myrpt->courtesy_freq);
                 }
                 if (time_us_64() - my_c->hang_c >= myrpt->hangTime){
 #ifdef CLOSE_DOWN_ID
@@ -151,6 +160,7 @@ int main()
         if(mustid && myrpt->tx) // Check if we must ID and in transmit mode
             id(myrpt);
 #endif
+        getState(myrpt);
     }
     return 0;
 }

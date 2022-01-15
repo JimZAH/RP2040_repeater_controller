@@ -8,6 +8,7 @@ typedef struct counters{
 
 typedef struct repeater{
     uint courtesy_freq;
+    bool clid;
     uint cw_freq;
     bool ext_rx;
     bool ext_tx;

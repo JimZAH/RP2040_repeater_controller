@@ -18,6 +18,11 @@ void id(rpt *myrpt){
         tx(myrpt->tx = 1);
         sleep_ms(500);
     }
+    if (myrpt->clid){
+        ids("-..", myrpt->cw_freq);
+        ids(".", myrpt->cw_freq);
+        sleep_ms(space*2);
+    }
     for (int i=0; i < sizeof(morse) / sizeof(morse[0]); i++){
     if (i > 4){
       sleep_ms(space*2);
@@ -25,6 +30,7 @@ void id(rpt *myrpt){
      ids(morse[i], myrpt->cw_freq);
     }
     myrpt->cw_freq=CW_BEACON_FREQ;
+    myrpt->clid = 0;
 }
 
 void ids(char* s, int tone){
@@ -77,13 +83,15 @@ int main()
     rpt *myrpt = &Rpt;
 
     myrpt->courtesy_freq=COURTESY_TONE_FREQ;
+    myrpt->clid = 0;
     myrpt->cw_freq=CW_BEACON_FREQ;
     myrpt->hangTime=HANGTIME;
     myrpt->latchTime=LATCHTIME;
     myrpt->sampleTime=SAMPLETIME;
     myrpt->timeOut=TIMEOUT;
     myrpt->tt = 0;
-    myrpt->tx = 0;
+    tx(myrpt->tx = 0);
+    myrpt->rx = 0;
     my_c->latch_c=0;
 
     struct repeating_timer timer;
@@ -141,6 +149,7 @@ int main()
                 if (time_us_64() - my_c->hang_c >= myrpt->hangTime){
 #ifdef CLOSE_DOWN_ID
                     myrpt->cw_freq=CW_CLOSEDOWN_FREQ;
+                    myrpt->clid = 1;
                     id(myrpt);
                     if(rx())
                         continue;

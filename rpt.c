@@ -8,6 +8,4 @@ void getState(rpt *myrpt){
         myrpt->receiverId = 1;
     else if (myrpt->ext_rx)
         myrpt->receiverId = 2;
-    else
-        myrpt->receiverId = 0;
 }

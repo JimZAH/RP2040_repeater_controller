@@ -1,15 +1,31 @@
-#define COS 14
-#define CTCSS 15
-#define EXT_RX 13
-#define EXT_PTT 12
-#define RF_MUTE 11
+#define COS 5
+#define D0 0
+#define D1 1
+#define D2 2
+#define D3 3
+#define DD 4
+#define CTCSS 6
+#define EXT_RX 7
+#define EXT_PTT 8
+#define RF_MUTE 9
 #define EXT_MUTE 10
-#define PTT 17
-#define PIP 16
+#define PTT 11
+#define PIP 12
 #define PTT_LED 25
 #define RSSI 26
+#define TONE_BURST 13
 
-int pins_num[10] = {
+#define GPIO_BASE 0xd0000010;
+
+//FFFFFFF0
+//FFFFFFF
+
+int pins_num[16] = {
+    D0,
+    D1,
+    D2,
+    D3,
+    DD,
     COS,
     CTCSS,
     EXT_RX,
@@ -19,10 +35,16 @@ int pins_num[10] = {
     PTT,
     PIP,
     PTT_LED,
-    RSSI
+    RSSI,
+    TONE_BURST
 };
 
-int dir_num[10][2] = {
+int dir_num[16][2] = {
+    {D0, GPIO_IN},
+    {D1, GPIO_IN},
+    {D2, GPIO_IN},
+    {D3, GPIO_IN},
+    {DD, GPIO_IN},
     {COS, GPIO_IN},
     {CTCSS, GPIO_IN},
     {EXT_RX, GPIO_IN},
@@ -32,5 +54,6 @@ int dir_num[10][2] = {
     {PTT, GPIO_OUT},
     {PIP, GPIO_OUT},
     {PTT_LED, GPIO_OUT},
-    {RSSI, GPIO_IN}
+    {RSSI, GPIO_IN},
+    {TONE_BURST, GPIO_IN}
 };

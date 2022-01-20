@@ -17,6 +17,7 @@ typedef struct repeater{
     bool idle;
     bool latch;
     uint64_t latchTime;
+    uint8_t mode;
     uint8_t receiverId;
     bool rx;
     uint16_t rssi;

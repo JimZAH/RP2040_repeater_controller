@@ -80,6 +80,7 @@ int main()
 #endif
     rfMute(1);
     extMute(1);
+    int cc = 0; // DTMF counter
     counter Rpt_c;
     counter *my_c = &Rpt_c;
     rpt Rpt;
@@ -89,7 +90,9 @@ int main()
     myrpt->clid = 0;
     myrpt->cw_freq=CW_BEACON_FREQ;
     myrpt->hangTime=HANGTIME;
+    myrpt->idle=1;
     myrpt->latchTime=LATCHTIME;
+    myrpt->mode=MODE;
     myrpt->sampleTime=SAMPLETIME;
     myrpt->timeOut=TIMEOUT;
     myrpt->tt = 0;
@@ -116,16 +119,29 @@ int main()
 
     while (1){
 
-        if (dtmfDetect()){
-            printf("DTMF Detect line\n");
-            uint8_t a = gpio_get_all();
-            a = a & DTMF_MASK;
-            printf("Loaded A\n");
-            printf("%d\n", a);
-            sleep_ms(1000);
+        if (myrpt->idle){
+            switch(myrpt->mode){
+            case 0: // carrier only
+            if (myrpt->rx)
+                myrpt->idle=0;
+            break;
+            case 1: // CTCSS or toneburst
+            if (myrpt->rx && myrpt->ctcss_decode && !myrpt->tt || myrpt->rx && myrpt->tb && !myrpt->tt)
+                myrpt->idle = 0;
+            break;
+            case 2: // CTCSS
+            if (myrpt->rx && myrpt->ctcss_decode && !myrpt->tt)
+                myrpt->idle = 0;
+            break;
+            case 3: // toneburst
+            if (myrpt->rx && myrpt->tb && !myrpt->tt)
+                myrpt->idle = 0;
+            default:
+            break;
+            }
         }
 
-        if (myrpt->rx && !myrpt->tt){ // If a valid signal is present on input
+        if (myrpt->rx && !myrpt->idle && !myrpt->tt){ // If a valid signal is present on input
             my_c->hang_c = 0;
             my_c->sample_c = time_us_64();
             myrpt->tt = 1;
@@ -133,12 +149,22 @@ int main()
             rfMute(0);
         }
 
-        if (myrpt->rx && !myrpt->latch && my_c->latch_c == 0) // Start the latch timer
+        if (myrpt->rx && myrpt->tt && !myrpt->latch && my_c->latch_c == 0) // Start the latch timer
             my_c->latch_c=time_us_64();
 
         if (myrpt->rx && time_us_64() - my_c->latch_c >= myrpt->latchTime && !myrpt->latch){ // If the user has latched
             myrpt->latch = 1;
             my_c->latch_c = 0;
+        }
+
+        if (dtmfDetect() && myrpt->latch){
+            cc++;
+            printf("DTMF Detect line\n");
+            uint8_t a = gpio_get_all();
+            a = a & DTMF_MASK;
+            printf("Loaded A\n");
+            printf("%d\n", a);
+            sleep_ms(1000);
         }
 
         if(!myrpt->rx && myrpt->tt){ // If valid signal has gone
@@ -172,6 +198,7 @@ int main()
                 }
             } else {
                 sleep_ms(250);
+                myrpt->idle = 1;
                 my_c->latch_c = 0;
                 tx(myrpt->tx = 0);
             }

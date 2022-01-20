@@ -4,6 +4,18 @@
 
 
 
+bool dtmfDetect()
+{
+#ifdef DTMF_INVERT
+    if (!gpio_get(DD))
+        return true;
+#else
+    if (gpio_get(DD))
+        return true;
+#endif
+    return false;
+}
+
 void extMute(bool state)
 {
 #ifdef EXT_MUTE_INVERT
@@ -48,6 +60,10 @@ bool extRx()
 
 void tx(bool state)
 {
+    if (state)
+        gpio_put(LAMP_TX, 1);
+    else
+        gpio_put(LAMP_TX, 0);
 #ifdef PTT_INVERT
     if (state){
         gpio_put(PTT, true);
@@ -81,12 +97,17 @@ void rfMute(bool state)
 bool rx()
 {
 #ifdef COS_INVERT
-    if (!gpio_get(COS))
+    if (!gpio_get(COS)){
+        gpio_put(LAMP_SQL, 1);
         return true;
+    }
 #else
-    if (gpio_get(COS))
+    if (gpio_get(COS)){
+        gpio_put(LAMP_SQL, 1);
         return true;
+    }
 #endif
+    gpio_put(LAMP_SQL, 0);
     return false;
 }
 

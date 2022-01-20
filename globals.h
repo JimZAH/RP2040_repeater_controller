@@ -1,3 +1,5 @@
+#define DEBUG
+
 // ID
 #define BEACON_ID //Uncomment to enable BEACON ID
 #define CLOSE_DOWN_ID //Uncomment to enable ID on closedown
@@ -11,6 +13,7 @@ char* morse[6] = {"--.","-...","...--","...-",".--", "-.."};
 
 // IO
 #define COS_INVERT //Uncomment to flip COS signal
+#define DTMF_INVERT
 //#define EXT_MUTE_INVERT//Uncomment to flip EXT_MUTE signal
 //#define EXT_PTT_INVERT//Uncomment to flip EXT_PTT signal
 #define EXT_RX_INVERT
@@ -23,7 +26,7 @@ char* morse[6] = {"--.","-...","...--","...-",".--", "-.."};
 
 // Time
 #define HANGTIME 10000000ULL
-#define ID 900000
+#define ID 300000
 #define LATCHTIME 2000000ULL
 #define SAMPLETIME 2000000ULL
 #define TIMEOUT 240000

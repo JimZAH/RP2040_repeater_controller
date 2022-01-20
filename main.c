@@ -44,13 +44,13 @@ void ids(char* s, int tone){
 }
 
 void idm(char c, int tone){
-  set_pwm_pin(16,tone,750);
+  set_pwm_pin(PIP,tone,2500);
   if (c == '.'){
     sleep_ms(dit);
   } else {
     sleep_ms(dah);
   }
-  set_pwm_pin(16,0,0);
+  set_pwm_pin(PIP,0,0);
   sleep_ms(dit);
 }
 
@@ -75,6 +75,9 @@ char* overTone(rpt *myrpt){
 
 int main()
 {
+#ifdef DEBUG
+    stdio_init_all();
+#endif
     rfMute(1);
     extMute(1);
     counter Rpt_c;
@@ -109,8 +112,19 @@ int main()
     adc_gpio_init(RSSI);
     adc_select_input(0);
 
+    id(myrpt);
 
     while (1){
+
+        if (dtmfDetect()){
+            printf("DTMF Detect line\n");
+            uint8_t a = gpio_get_all();
+            a = a & DTMF_MASK;
+            printf("Loaded A\n");
+            printf("%d\n", a);
+            sleep_ms(1000);
+        }
+
         if (myrpt->rx && !myrpt->tt){ // If a valid signal is present on input
             my_c->hang_c = 0;
             my_c->sample_c = time_us_64();

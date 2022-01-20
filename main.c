@@ -73,6 +73,13 @@ char* overTone(rpt *myrpt){
     
 }
 
+void printDebug(char* message, int data){
+#ifdef DEBUG
+    printf(message, data);
+#endif
+    return;
+}
+
 int main()
 {
 #ifdef DEBUG
@@ -124,14 +131,17 @@ int main()
             case 0: // carrier only
             if (myrpt->rx)
                 myrpt->idle=0;
+                printDebug("%s", "Carrier");
             break;
             case 1: // CTCSS or toneburst
             if (myrpt->rx && myrpt->ctcss_decode && !myrpt->tt || myrpt->rx && myrpt->tb && !myrpt->tt)
                 myrpt->idle = 0;
+                printDebug("%s", "CTCSS/Toneburst");
             break;
             case 2: // CTCSS
             if (myrpt->rx && myrpt->ctcss_decode && !myrpt->tt)
                 myrpt->idle = 0;
+                printDebug("%s", "CTCSS");
             break;
             case 3: // toneburst
             if (myrpt->rx && myrpt->tb && !myrpt->tt)
@@ -159,11 +169,10 @@ int main()
 
         if (dtmfDetect() && myrpt->latch){
             cc++;
-            printf("DTMF Detect line\n");
+            printDebug("DTMF Detect line\n", NULL);
             uint8_t a = gpio_get_all();
             a = a & DTMF_MASK;
-            printf("Loaded A\n");
-            printf("%d\n", a);
+            printDebug("DTMF: %d\n", a);
             sleep_ms(1000);
         }
 
@@ -183,7 +192,7 @@ int main()
 
             if (myrpt->latch){
                 if (time_us_64() - my_c->hang_c <= 500){
-                    sleep_ms(750);
+                    sleep_ms(1000);
                     ids(overTone(myrpt), myrpt->courtesy_freq);
                 }
                 if (time_us_64() - my_c->hang_c >= myrpt->hangTime){

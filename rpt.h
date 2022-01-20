@@ -9,10 +9,12 @@ typedef struct counters{
 typedef struct repeater{
     uint courtesy_freq;
     bool clid;
+    bool ctcss_decode;
     uint cw_freq;
     bool ext_rx;
     bool ext_tx;
     uint64_t hangTime;
+    bool idle;
     bool latch;
     uint64_t latchTime;
     uint8_t receiverId;
@@ -22,5 +24,6 @@ typedef struct repeater{
     bool tt;
     bool tx;
     uint64_t timeOut;
+    bool tb;
     bool timedOut;
 }rpt;

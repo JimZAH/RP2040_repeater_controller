@@ -13,12 +13,14 @@ char* morse[6] = {"--.","-...","...--","...-",".--", "-.."};
 
 // IO
 #define COS_INVERT //Uncomment to flip COS signal
+#define CTCSS_DECODE_INVERT //Uncomment to flip CTCSS decode signal
 #define DTMF_INVERT
 //#define EXT_MUTE_INVERT//Uncomment to flip EXT_MUTE signal
 //#define EXT_PTT_INVERT//Uncomment to flip EXT_PTT signal
 #define EXT_RX_INVERT
 //#define PTT_INVERT //Uncomment to flip PTT signal
 //#define RF_MUTE_INVERT //Uncomment to flip RF_MUTE signal
+#define TB_INVERT //Uncomment to flip Tone burst signal
 
 // RSSI
 #define RSSI_LOW 380 // RSSI LOW SIGNAL

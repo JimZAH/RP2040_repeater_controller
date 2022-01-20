@@ -3,6 +3,22 @@
 #include "io.h"
 
 
+bool ctcssDetect()
+{
+#ifdef CTCSS_DECODE_INVERT
+    if (!gpio_get(CTCSS_DETECT)){
+        gpio_put(LAMP_CTCSS_DECODE, 1);
+        return true;
+    }
+#else
+    if (gpio_get(CTCSS_DETECT)){
+        gpio_put(LAMP_CTCSS_DECODE, 1);
+        return true;
+    }
+#endif
+    gpio_put(LAMP_CTCSS_DECODE, 0);
+    return false;
+}
 
 bool dtmfDetect()
 {
@@ -120,4 +136,22 @@ void set_pwm_pin(uint pin, uint freq, uint duty_c) { // duty_c between 0..10000
 		pwm_config_set_wrap(&config, 10000);
 		pwm_init(slice_num, &config, true); // start the pwm running according to the config
 		pwm_set_gpio_level(pin, duty_c); //connect the pin to the pwm engine and set the on/off level. 
-};
+        gpio_put(LAMP_CWID, duty_c); // Flash CWID lamp
+}
+
+bool toneBurst()
+{
+#ifdef TB_INVERT
+    if (!gpio_get(TONE_BURST)){
+        gpio_put(LAMP_TB_DECODE, 1);
+        return true;
+    }
+#else
+    if (gpio_get(TONE_BURST)){
+        gpio_put(LAMP_TB_DECODE, 1);
+        return true;
+    }
+#endif
+    gpio_put(LAMP_TB_DECODE, 0);
+    return false;
+}

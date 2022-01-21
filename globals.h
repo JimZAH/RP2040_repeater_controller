@@ -1,6 +1,6 @@
 // Options
 #define DEBUG
-#define MODE 1 // RX mode. 0 Carrier only, 1 CTCSS or toneburst, 2 CTCSS, 3 Toneburst
+#define MODE 5 // RX mode. 0 Carrier only, 1 CTCSS or toneburst, 2 CTCSS, 3 Toneburst
 
 // ID
 #define BEACON_ID //Uncomment to enable BEACON ID

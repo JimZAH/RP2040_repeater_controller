@@ -132,21 +132,35 @@ int main()
             case 0: // carrier only
             if (myrpt->rx)
                 myrpt->idle=0;
-                printDebug("%s", "Carrier");
             break;
             case 1: // CTCSS or toneburst
             if (myrpt->rx && myrpt->ctcss_decode && !myrpt->tt || myrpt->rx && myrpt->tb && !myrpt->tt && !myrpt->receiver_protected)
                 myrpt->idle = 0;
-                printDebug("%s", "CTCSS/Toneburst");
             break;
             case 2: // CTCSS
             if (myrpt->rx && myrpt->ctcss_decode && !myrpt->tt)
                 myrpt->idle = 0;
-                printDebug("%s", "CTCSS");
             break;
             case 3: // toneburst
             if (myrpt->rx && myrpt->tb && !myrpt->tt)
                 myrpt->idle = 0;
+            break;
+            case 4: // carrier only and internet gateway
+            if (myrpt->rx || myrpt->ext_rx)
+                myrpt->idle=0;
+            break;
+            case 5: // CTCSS or toneburst and internet gateway
+            if (myrpt->rx && myrpt->ctcss_decode && !myrpt->tt || myrpt->rx && myrpt->tb && !myrpt->tt && !myrpt->receiver_protected || myrpt->ext_rx)
+                myrpt->idle = 0;
+            break;
+            case 6: // CTCSS and internet gateway
+            if (myrpt->rx && myrpt->ctcss_decode && !myrpt->tt || myrpt->ext_rx)
+                myrpt->idle = 0;
+            break;
+            case 7: // toneburst and internet gateway
+            if (myrpt->rx && myrpt->tb && !myrpt->tt || myrpt->ext_rx)
+                myrpt->idle = 0;
+            break;
             default:
             break;
             }
@@ -158,6 +172,12 @@ int main()
             myrpt->tt = 1;
             tx(myrpt->tx = 1);
             rfMute(0);
+        } else if (myrpt->ext_rx && !myrpt->idle && !myrpt->tt){
+            my_c->hang_c = 0;
+            myrpt->tt = 1;
+            tx(myrpt->tx = 1);
+            myrpt->latch = 1;
+            extMute(0);
         }
 
         if (myrpt->rx && myrpt->tt && !myrpt->latch && my_c->latch_c == 0) // Start the latch timer
@@ -170,18 +190,21 @@ int main()
 
         if (dtmfDetect() && myrpt->latch){
             cc++;
-            printDebug("DTMF Detect line\n", NULL);
+            printDebug("DTMF Detect line\n", 0);
             uint8_t a = gpio_get_all();
             a = a & DTMF_MASK;
             printDebug("DTMF: %d\n", a);
             sleep_ms(1000);
         }
 
-        if(!myrpt->rx && myrpt->tt || !myrpt->ctcss_decode && myrpt->receiver_protected){ // If valid signal has gone
+        if(!myrpt->rx && !myrpt->ext_rx && myrpt->tt || !myrpt->ctcss_decode && myrpt->receiver_protected){ // If valid signal has gone
             myrpt->tt = 0;
             if (myrpt->receiver_protected)
                 myrpt->idle = 1;
             rfMute(1);
+        } else if (!myrpt->ext_rx && !myrpt->rx && myrpt->tt){
+            myrpt->tt = 0;
+            rfMute(1); 
         }
 
         if (myrpt->latch && myrpt->rx && time_us_64() - my_c->sample_c >= myrpt->sampleTime){

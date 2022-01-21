@@ -1,6 +1,8 @@
 // Options
 #define DEBUG
+#define DTMF_ALLSTAR_START 0xB
 #define MODE 5 // RX mode. 0 Carrier only, 1 CTCSS or toneburst, 2 CTCSS, 3 Toneburst, 4 same as 0 with gateway, 5, same as 1 with gateway, 6 same as 2 with gateway, 7, same as 3 with gateway
+#define USER_COMMAND 0
 
 // ID
 #define BEACON_ID //Uncomment to enable BEACON ID

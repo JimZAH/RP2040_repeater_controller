@@ -22,7 +22,7 @@
 #define TONE_BURST 13
 
 //MASKS
-#define DTMF_MASK 0xFFFFFF
+#define DTMF_MASK 0xF
 
 int pins_num[22] = {
     D0,

@@ -191,9 +191,22 @@ int main()
         if (dtmfDetect() && myrpt->rx){
             cc++;
             printDebug("DTMF Detect line\n", 0);
-            uint8_t a = gpio_get_all();
-            a = a & DTMF_MASK;
-            printDebug("DTMF: %d\n", a);
+            uint8_t code = gpio_get_all() & DTMF_MASK;
+            if (cc == 1){
+                switch (code){
+                    case 0:
+                    break;
+                    case 1:
+                    break;
+                    case DTMF_ALLSTAR_START:
+                    cc = 0;
+                    break;
+                    default:
+                    cc = 0;
+                    break;
+                }
+            }
+            printf("DTMF: %d\n", code);
             sleep_ms(1000);
         }
 

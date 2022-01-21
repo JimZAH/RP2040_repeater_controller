@@ -88,6 +88,7 @@ int main()
     rfMute(1);
     extMute(1);
     int cc = 0; // DTMF counter
+    uint8_t input[10] = {0}; // DTMF command store
     counter Rpt_c;
     counter *my_c = &Rpt_c;
     rpt Rpt;
@@ -192,19 +193,24 @@ int main()
             cc++;
             printDebug("DTMF Detect line\n", 0);
             uint8_t code = gpio_get_all() & DTMF_MASK;
-            if (cc == 1){
-                switch (code){
-                    case 0:
-                    break;
-                    case 1:
-                    break;
-                    case DTMF_ALLSTAR_START:
-                    cc = 0;
-                    break;
-                    default:
-                    cc = 0;
-                    break;
+            switch(code){
+                case DTMF_ALLSTAR_START:
+                cc=0;
+                break;
+                case DTMF_RESET_DIGIT:
+                cc=0;
+                for (int i = 0; i < 9; i++){
+                    input[i] = 0;
                 }
+                break;
+                default:
+                input[cc-1] = code;
+            }
+            if (cc >= 6) {
+                for (int i = 0; i < 6; i++){
+                    printf("%d", input[i]);
+                }
+                cc = 0;
             }
             printf("DTMF: %d\n", code);
             sleep_ms(1000);

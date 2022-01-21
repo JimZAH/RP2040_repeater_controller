@@ -135,7 +135,7 @@ int main()
                 printDebug("%s", "Carrier");
             break;
             case 1: // CTCSS or toneburst
-            if (myrpt->rx && myrpt->ctcss_decode && !myrpt->tt || myrpt->rx && myrpt->tb && !myrpt->tt)
+            if (myrpt->rx && myrpt->ctcss_decode && !myrpt->tt || myrpt->rx && myrpt->tb && !myrpt->tt && !myrpt->receiver_protected)
                 myrpt->idle = 0;
                 printDebug("%s", "CTCSS/Toneburst");
             break;

@@ -204,7 +204,7 @@ int main()
             rfMute(1);
         } else if (!myrpt->ext_rx && !myrpt->rx && myrpt->tt){
             myrpt->tt = 0;
-            rfMute(1); 
+            extMute(1); 
         }
 
         if (myrpt->latch && myrpt->rx && time_us_64() - my_c->sample_c >= myrpt->sampleTime){

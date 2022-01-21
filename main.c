@@ -104,6 +104,7 @@ int main()
     myrpt->timeOut=TIMEOUT;
     myrpt->tt = 0;
     tx(myrpt->tx = 0);
+    myrpt->receiver_protected = 0;
     myrpt->rx = 0;
     my_c->latch_c=0;
 
@@ -126,7 +127,7 @@ int main()
 
     while (1){
 
-        if (myrpt->idle){
+        if (myrpt->idle || myrpt->receiver_protected){
             switch(myrpt->mode){
             case 0: // carrier only
             if (myrpt->rx)
@@ -162,7 +163,7 @@ int main()
         if (myrpt->rx && myrpt->tt && !myrpt->latch && my_c->latch_c == 0) // Start the latch timer
             my_c->latch_c=time_us_64();
 
-        if (myrpt->rx && time_us_64() - my_c->latch_c >= myrpt->latchTime && !myrpt->latch){ // If the user has latched
+        if (myrpt->rx && time_us_64() - my_c->latch_c >= myrpt->latchTime && !myrpt->latch && !myrpt->idle){ // If the user has latched
             myrpt->latch = 1;
             my_c->latch_c = 0;
         }
@@ -176,8 +177,10 @@ int main()
             sleep_ms(1000);
         }
 
-        if(!myrpt->rx && myrpt->tt){ // If valid signal has gone
+        if(!myrpt->rx && myrpt->tt || !myrpt->ctcss_decode && myrpt->receiver_protected){ // If valid signal has gone
             myrpt->tt = 0;
+            if (myrpt->receiver_protected)
+                myrpt->idle = 1;
             rfMute(1);
         }
 

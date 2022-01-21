@@ -188,7 +188,7 @@ int main()
             my_c->latch_c = 0;
         }
 
-        if (dtmfDetect() && myrpt->latch){
+        if (dtmfDetect() && myrpt->rx){
             cc++;
             printDebug("DTMF Detect line\n", 0);
             uint8_t a = gpio_get_all();

@@ -193,6 +193,7 @@ int main()
             cc++;
             printDebug("DTMF Detect line\n", 0);
             uint8_t code = gpio_get_all() & DTMF_MASK;
+            rfMute(1);
             switch(code){
                 case DTMF_ALLSTAR_START:
                 cc=0;
@@ -203,17 +204,36 @@ int main()
                     input[i] = 0;
                 }
                 break;
+                case 8:
+                id(myrpt);
+                break;
                 default:
                 input[cc-1] = code;
             }
             if (cc >= 6) {
-                for (int i = 0; i < 6; i++){
+                int pass = 0;
+                for (int i = 0; i < 3; i++){
                     printf("%d", input[i]);
+                    pass = pass * 10;
+                    pass = pass + input[i];
+                }
+                if (pass == PASSCODE){
+                    ids(".--.", 1000);
+                    sleep_ms(1000);
+                    switch(input[3]){
+                        case 1:
+                        myrpt->cw_freq=400;
+                        id(myrpt);
+                        break;
+                        default:
+                        break;
+                    }
                 }
                 cc = 0;
             }
             printf("DTMF: %d\n", code);
             sleep_ms(1000);
+            rfMute(0);
         }
 
         if(!myrpt->rx && !myrpt->ext_rx && myrpt->tt || !myrpt->ctcss_decode && myrpt->receiver_protected){ // If valid signal has gone
@@ -238,7 +258,15 @@ int main()
             if (myrpt->latch){
                 if (time_us_64() - my_c->hang_c <= 500){
                     sleep_ms(1000);
-                    ids(overTone(myrpt), myrpt->courtesy_freq);
+                    for (int i = 0; i <= 1000; i++){
+                        set_pwm_pin(PIP,1100,2000-i*2);
+                        sleep_ms(1);
+                        if(rx()){
+                            set_pwm_pin(PIP,0,0);
+                            break;
+                        }
+                    }
+                   // ids(overTone(myrpt), myrpt->courtesy_freq);
                 }
                 if (time_us_64() - my_c->hang_c >= myrpt->hangTime){
 #ifdef CLOSE_DOWN_ID

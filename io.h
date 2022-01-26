@@ -5,7 +5,7 @@
 #define D3 3
 #define DD 4
 #define CTCSS_DETECT 6
-#define CTCSS_ENCODE 14
+#define CTCSS_ENCODE 10
 #define EXT_RX 7
 #define EXT_PTT 8
 #define LAMP_TX 18
@@ -14,7 +14,7 @@
 #define LAMP_TB_DECODE 21
 #define LAMP_CWID 22
 #define RF_MUTE 9
-#define EXT_MUTE 10
+#define EXT_MUTE 14
 #define PTT 11
 #define PIP 12
 #define PTT_LED 25

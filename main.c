@@ -173,7 +173,9 @@ int main()
             myrpt->tt = 1;
             tx(myrpt->tx = 1);
             rfMute(0);
-        } else if (myrpt->ext_rx && !myrpt->idle && !myrpt->tt){
+        }
+        
+        if (myrpt->ext_rx && !myrpt->idle && !myrpt->tt){
             my_c->hang_c = 0;
             myrpt->tt = 1;
             tx(myrpt->tx = 1);
@@ -241,10 +243,8 @@ int main()
             if (myrpt->receiver_protected)
                 myrpt->idle = 1;
             rfMute(1);
-        } else if (!myrpt->ext_rx && !myrpt->rx && myrpt->tt){
-            myrpt->tt = 0;
-            extMute(1); 
-        }
+            extMute(1);
+        } 
 
         if (myrpt->latch && myrpt->rx && time_us_64() - my_c->sample_c >= myrpt->sampleTime){
             my_c->sample_c = time_us_64();
@@ -258,15 +258,7 @@ int main()
             if (myrpt->latch){
                 if (time_us_64() - my_c->hang_c <= 500){
                     sleep_ms(750);
-                   for (int i = 0; i <= 500; i++){
-                        set_pwm_pin(PIP,myrpt->courtesy_freq,2000-i*4);
-                        sleep_ms(1);
-                        if(rx()){
-                            set_pwm_pin(PIP,0,0);
-                            break;
-                        }
-                    }
-                   // ids(overTone(myrpt), myrpt->courtesy_freq);
+                    ids(overTone(myrpt), myrpt->courtesy_freq);
                 }
                 if (time_us_64() - my_c->hang_c >= myrpt->hangTime){
 #ifdef CLOSE_DOWN_ID

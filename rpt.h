@@ -2,6 +2,7 @@ typedef struct counters{
     uint64_t hang_c;
     uint64_t latch_c;
     uint64_t sample_c;
+    uint8_t tail_c;
     uint64_t timeOut_c;
 }counter;
 

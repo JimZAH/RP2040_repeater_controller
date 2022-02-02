@@ -57,16 +57,18 @@ void idm(char c, int tone){
 char* overTone(rpt *myrpt){
 
     switch(myrpt->receiverId){
-        case 1:
+        case 1: // CTCSS
             if (myrpt->rssi >= RSSI_HIGH) {
-              return "....";
+              return "-";
             if (myrpt->rssi <= RSSI_LOW) {
               return "..";
               }
             }
             return "...";
-        case 2:
+        case 2: // Internet
             return "-.-";
+        case 3: // No CTCSS / TB
+            return "-..";
         default:
             return ".";
     }
@@ -108,6 +110,11 @@ int main()
     myrpt->receiver_protected = 0;
     myrpt->rx = 0;
     my_c->latch_c=0;
+#ifdef CLOSEDOWN_ID
+    my_c->tail_c=TAIL_ID;
+#else
+    my_c->tail_c=0;
+#endif
 
     struct repeating_timer timer;
     add_repeating_timer_ms(ID, id_time, NULL, &timer); // Setup ID timer
@@ -170,6 +177,7 @@ int main()
         if (myrpt->rx && !myrpt->idle && !myrpt->tt){ // If a valid signal is present on input
             my_c->hang_c = 0;
             my_c->sample_c = time_us_64();
+            my_c->timeOut_c = my_c->sample_c;
             myrpt->tt = 1;
             tx(myrpt->tx = 1);
             rfMute(0);
@@ -177,6 +185,7 @@ int main()
         
         if (myrpt->ext_rx && !myrpt->idle && !myrpt->tt){
             my_c->hang_c = 0;
+            my_c->timeOut_c = time_us_64();
             myrpt->tt = 1;
             tx(myrpt->tx = 1);
             myrpt->latch = 1;
@@ -244,11 +253,18 @@ int main()
                 myrpt->idle = 1;
             rfMute(1);
             extMute(1);
-        } 
+        }
 
         if (myrpt->latch && myrpt->rx && time_us_64() - my_c->sample_c >= myrpt->sampleTime){
             my_c->sample_c = time_us_64();
             myrpt->rssi = adc_read();
+        }
+
+        if ((myrpt->rx || myrpt->ext_rx) && time_us_64() - my_c->timeOut_c >= myrpt->timeOut){ // TIMEOUT
+            rfMute(1);
+            if(myrpt->tx)
+                ids(".-.-.-.-.-.-.-.-.-.-", 400);
+            tx(myrpt->tx=0);
         }
 
         if(!myrpt->tt && myrpt->tx){ // Start the hangtimer
@@ -256,18 +272,19 @@ int main()
                 my_c->hang_c=time_us_64();
 
             if (myrpt->latch){
-                if (time_us_64() - my_c->hang_c <= 500){
+                if (time_us_64() - my_c->hang_c <= 500 && time_us_64() - my_c->timeOut_c >= myrpt->sampleTime){
                     sleep_ms(750);
                     ids(overTone(myrpt), myrpt->courtesy_freq);
                 }
                 if (time_us_64() - my_c->hang_c >= myrpt->hangTime){
-#ifdef CLOSE_DOWN_ID
-                    myrpt->cw_freq=CW_CLOSEDOWN_FREQ;
-                    myrpt->clid = 1;
-                    id(myrpt);
-                    if(rx())
-                        continue;
-#endif
+                    if (my_c->tail_c >= TAIL_ID-1){
+                        my_c->tail_c = 0;
+                        myrpt->cw_freq=CW_CLOSEDOWN_FREQ;
+                        myrpt->clid = 1;
+                        id(myrpt);
+                        if(rx())
+                            continue;
+                        }
                     myrpt->latch = 0;
                 }
             } else {
@@ -275,6 +292,7 @@ int main()
                 myrpt->idle = 1;
                 my_c->latch_c = 0;
                 tx(myrpt->tx = 0);
+                my_c->tail_c++;
             }
         }
 #ifdef BEACON_ID

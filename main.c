@@ -82,7 +82,8 @@ void printDebug(char* message, int data){
     return;
 }
 
-void ack(rpt *myrpt){
+void ack(rpt *myrpt){ // Send "C" to let user know the command was received.
+    sleep_ms(250);
     ids("-.-.", myrpt->cw_freq);
     myrpt->ack_c = 1;
 }
@@ -117,11 +118,7 @@ int main()
     myrpt->receiver_protected = 0;
     myrpt->rx = 0;
     my_c->latch_c=0;
-#ifdef CLOSEDOWN_ID
     my_c->tail_c=TAIL_ID;
-#else
-    my_c->tail_c=0;
-#endif
 
     struct repeating_timer timer;
     add_repeating_timer_ms(ID, id_time, NULL, &timer); // Setup ID timer

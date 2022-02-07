@@ -2,8 +2,8 @@
 #define DEBUG
 #define DTMF_ALLSTAR_START 0xB
 #define DTMF_RESET_DIGIT 0xC
+#define DTMF_USER_DIGIT 0x0
 #define MODE 5 // RX mode. 0 Carrier only, 1 CTCSS or toneburst, 2 CTCSS, 3 Toneburst, 4 same as 0 with gateway, 5, same as 1 with gateway, 6 same as 2 with gateway, 7, same as 3 with gateway
-#define USER_COMMAND 0
 #define PASSCODE 123
 
 // ID

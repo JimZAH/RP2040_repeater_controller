@@ -82,6 +82,11 @@ void printDebug(char* message, int data){
     return;
 }
 
+void ack(rpt *myrpt){
+    ids("-.-.", myrpt->cw_freq);
+    myrpt->ack_c = 1;
+}
+
 int main()
 {
 #ifdef DEBUG
@@ -96,6 +101,8 @@ int main()
     rpt Rpt;
     rpt *myrpt = &Rpt;
 
+    myrpt->ack_c = 0;
+    myrpt->allow_c = 1;
     myrpt->courtesy_freq=COURTESY_TONE_FREQ;
     myrpt->clid = 0;
     myrpt->cw_freq=CW_BEACON_FREQ;
@@ -203,9 +210,39 @@ int main()
         if (dtmfDetect() && myrpt->rx){
             cc++;
             printDebug("DTMF Detect line\n", 0);
-            uint8_t code = gpio_get_all() & DTMF_MASK;
+            uint8_t code = getCode();
             rfMute(1);
             switch(code){
+                case DTMF_USER_DIGIT: // User control
+                cc=0;
+                if (!myrpt->allow_c) // Is user control enabled?
+                    break;
+                for (int i = 0; i < 12; i++){ // 3 seconds is enough
+                    sleep_ms(250);
+                    switch (getCode()){
+                        case DTMF_USER_DIGIT: // User hasn't entered anything so do nothing
+                        break;
+                        case 1: // User has requested ID
+                        ack(myrpt);
+                        sleep_ms(100);
+                        id(myrpt);
+                        break;
+                        case 2: // User has requested normal hangtime
+                        ack(myrpt);
+                        myrpt->hangTime=HANGTIME;
+                        break;
+                        case 3: // User has requested short hangtime
+                        ack(myrpt);
+                        myrpt->hangTime=HANGTIME/4;
+                        default:
+                        break;
+                    }
+                    if (myrpt->ack_c){ // Break out if we received a command
+                        myrpt->ack_c = 0;
+                        break;
+                    }
+                }
+                break;
                 case DTMF_ALLSTAR_START:
                 cc=0;
                 break;
@@ -215,11 +252,9 @@ int main()
                     input[i] = 0;
                 }
                 break;
-                case 8:
-                id(myrpt);
-                break;
                 default:
                 input[cc-1] = code;
+                break;
             }
             if (cc >= 6) {
                 int pass = 0;
@@ -232,9 +267,8 @@ int main()
                     ids(".--.", 1000);
                     sleep_ms(1000);
                     switch(input[3]){
-                        case 1:
-                        myrpt->cw_freq=400;
-                        id(myrpt);
+                        case 1: // Disable/Enable user commands
+                        myrpt->allow_c=input[4];
                         break;
                         default:
                         break;

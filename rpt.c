@@ -1,5 +1,9 @@
 #include "rpt.h"
 
+int getCode(){
+    return gpio_get_all() & DTMF_MASK;
+}
+
 void getState(rpt *myrpt){
     myrpt->ctcss_decode = ctcssDetect();
     myrpt->rx = rx();

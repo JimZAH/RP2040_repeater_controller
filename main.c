@@ -44,39 +44,53 @@ void ids(char* s, int tone){
 }
 
 void idm(char c, int tone){
-  set_pwm_pin(16,tone,750);
+  set_pwm_pin(PIP,tone,2500);
   if (c == '.'){
     sleep_ms(dit);
   } else {
     sleep_ms(dah);
   }
-  set_pwm_pin(16,0,0);
+  set_pwm_pin(PIP,0,0);
   sleep_ms(dit);
 }
 
 char* overTone(rpt *myrpt){
 
     switch(myrpt->receiverId){
-        case 1:
+        case 1: // CTCSS
             if (myrpt->rssi >= RSSI_HIGH) {
-              return "....";
+              return "-";
             if (myrpt->rssi <= RSSI_LOW) {
               return "..";
               }
             }
             return "...";
-        case 2:
+        case 2: // Internet
             return "-.-";
+        case 3: // No CTCSS / TB
+            return "-..";
         default:
             return ".";
     }
     
 }
 
+void printDebug(char* message, int data){
+#ifdef DEBUG
+    printf(message, data);
+#endif
+    return;
+}
+
 int main()
 {
+#ifdef DEBUG
+    stdio_init_all();
+#endif
     rfMute(1);
     extMute(1);
+    int cc = 0; // DTMF counter
+    uint8_t input[10] = {0}; // DTMF command store
     counter Rpt_c;
     counter *my_c = &Rpt_c;
     rpt Rpt;
@@ -86,13 +100,21 @@ int main()
     myrpt->clid = 0;
     myrpt->cw_freq=CW_BEACON_FREQ;
     myrpt->hangTime=HANGTIME;
+    myrpt->idle=1;
     myrpt->latchTime=LATCHTIME;
+    myrpt->mode=MODE;
     myrpt->sampleTime=SAMPLETIME;
     myrpt->timeOut=TIMEOUT;
     myrpt->tt = 0;
     tx(myrpt->tx = 0);
+    myrpt->receiver_protected = 0;
     myrpt->rx = 0;
     my_c->latch_c=0;
+#ifdef CLOSEDOWN_ID
+    my_c->tail_c=TAIL_ID;
+#else
+    my_c->tail_c=0;
+#endif
 
     struct repeating_timer timer;
     add_repeating_timer_ms(ID, id_time, NULL, &timer); // Setup ID timer
@@ -109,27 +131,128 @@ int main()
     adc_gpio_init(RSSI);
     adc_select_input(0);
 
+    id(myrpt);
 
     while (1){
-        if (myrpt->rx && !myrpt->tt){ // If a valid signal is present on input
+
+        if (myrpt->idle || myrpt->receiver_protected){
+            switch(myrpt->mode){
+            case 0: // carrier only
+            if (myrpt->rx)
+                myrpt->idle=0;
+            break;
+            case 1: // CTCSS or toneburst
+            if (myrpt->rx && myrpt->ctcss_decode && !myrpt->tt || myrpt->rx && myrpt->tb && !myrpt->tt && !myrpt->receiver_protected)
+                myrpt->idle = 0;
+            break;
+            case 2: // CTCSS
+            if (myrpt->rx && myrpt->ctcss_decode && !myrpt->tt)
+                myrpt->idle = 0;
+            break;
+            case 3: // toneburst
+            if (myrpt->rx && myrpt->tb && !myrpt->tt)
+                myrpt->idle = 0;
+            break;
+            case 4: // carrier only and internet gateway
+            if (myrpt->rx || myrpt->ext_rx)
+                myrpt->idle=0;
+            break;
+            case 5: // CTCSS or toneburst and internet gateway
+            if (myrpt->rx && myrpt->ctcss_decode && !myrpt->tt || myrpt->rx && myrpt->tb && !myrpt->tt && !myrpt->receiver_protected || myrpt->ext_rx)
+                myrpt->idle = 0;
+            break;
+            case 6: // CTCSS and internet gateway
+            if (myrpt->rx && myrpt->ctcss_decode && !myrpt->tt || myrpt->ext_rx)
+                myrpt->idle = 0;
+            break;
+            case 7: // toneburst and internet gateway
+            if (myrpt->rx && myrpt->tb && !myrpt->tt || myrpt->ext_rx)
+                myrpt->idle = 0;
+            break;
+            default:
+            break;
+            }
+        }
+
+        if (myrpt->rx && !myrpt->idle && !myrpt->tt){ // If a valid signal is present on input
             my_c->hang_c = 0;
             my_c->sample_c = time_us_64();
+            my_c->timeOut_c = my_c->sample_c;
             myrpt->tt = 1;
             tx(myrpt->tx = 1);
             rfMute(0);
         }
+        
+        if (myrpt->ext_rx && !myrpt->idle && !myrpt->tt){
+            my_c->hang_c = 0;
+            my_c->timeOut_c = time_us_64();
+            myrpt->tt = 1;
+            tx(myrpt->tx = 1);
+            myrpt->latch = 1;
+            extMute(0);
+        }
 
-        if (myrpt->rx && !myrpt->latch && my_c->latch_c == 0) // Start the latch timer
+        if (myrpt->rx && myrpt->tt && !myrpt->latch && my_c->latch_c == 0) // Start the latch timer
             my_c->latch_c=time_us_64();
 
-        if (myrpt->rx && time_us_64() - my_c->latch_c >= myrpt->latchTime && !myrpt->latch){ // If the user has latched
+        if (myrpt->rx && time_us_64() - my_c->latch_c >= myrpt->latchTime && !myrpt->latch && !myrpt->idle){ // If the user has latched
             myrpt->latch = 1;
             my_c->latch_c = 0;
         }
 
-        if(!myrpt->rx && myrpt->tt){ // If valid signal has gone
-            myrpt->tt = 0;
+        if (dtmfDetect() && myrpt->rx){
+            cc++;
+            printDebug("DTMF Detect line\n", 0);
+            uint8_t code = gpio_get_all() & DTMF_MASK;
             rfMute(1);
+            switch(code){
+                case DTMF_ALLSTAR_START:
+                cc=0;
+                break;
+                case DTMF_RESET_DIGIT:
+                cc=0;
+                for (int i = 0; i < 9; i++){
+                    input[i] = 0;
+                }
+                break;
+                case 8:
+                id(myrpt);
+                break;
+                default:
+                input[cc-1] = code;
+            }
+            if (cc >= 6) {
+                int pass = 0;
+                for (int i = 0; i < 3; i++){
+                    printf("%d", input[i]);
+                    pass = pass * 10;
+                    pass = pass + input[i];
+                }
+                if (pass == PASSCODE){
+                    ids(".--.", 1000);
+                    sleep_ms(1000);
+                    switch(input[3]){
+                        case 1:
+                        myrpt->cw_freq=400;
+                        id(myrpt);
+                        break;
+                        default:
+                        break;
+                    }
+                }
+                cc = 0;
+            }
+            printf("DTMF: %d\n", code);
+            sleep_ms(1000);
+            rfMute(0);
+        }
+
+        if(!myrpt->rx && !myrpt->ext_rx && myrpt->tt || !myrpt->ctcss_decode && myrpt->receiver_protected){ // If valid signal has gone
+            myrpt->tt = 0;
+            if (myrpt->receiver_protected)
+                myrpt->idle = 1;
+            rfMute(1);
+            extMute(1);
         }
 
         if (myrpt->latch && myrpt->rx && time_us_64() - my_c->sample_c >= myrpt->sampleTime){
@@ -137,29 +260,39 @@ int main()
             myrpt->rssi = adc_read();
         }
 
+        if ((myrpt->rx || myrpt->ext_rx) && time_us_64() - my_c->timeOut_c >= myrpt->timeOut){ // TIMEOUT
+            rfMute(1);
+            if(myrpt->tx)
+                ids(".-.-.-.-.-.-.-.-.-.-", 400);
+            tx(myrpt->tx=0);
+        }
+
         if(!myrpt->tt && myrpt->tx){ // Start the hangtimer
             if (my_c->hang_c == 0)
                 my_c->hang_c=time_us_64();
 
             if (myrpt->latch){
-                if (time_us_64() - my_c->hang_c <= 500){
+                if (time_us_64() - my_c->hang_c <= 500 && time_us_64() - my_c->timeOut_c >= myrpt->sampleTime){
                     sleep_ms(750);
                     ids(overTone(myrpt), myrpt->courtesy_freq);
                 }
                 if (time_us_64() - my_c->hang_c >= myrpt->hangTime){
-#ifdef CLOSE_DOWN_ID
-                    myrpt->cw_freq=CW_CLOSEDOWN_FREQ;
-                    myrpt->clid = 1;
-                    id(myrpt);
-                    if(rx())
-                        continue;
-#endif
+                    if (my_c->tail_c >= TAIL_ID-1){
+                        my_c->tail_c = 0;
+                        myrpt->cw_freq=CW_CLOSEDOWN_FREQ;
+                        myrpt->clid = 1;
+                        id(myrpt);
+                        if(rx())
+                            continue;
+                        }
                     myrpt->latch = 0;
                 }
             } else {
                 sleep_ms(250);
+                myrpt->idle = 1;
                 my_c->latch_c = 0;
                 tx(myrpt->tx = 0);
+                my_c->tail_c++;
             }
         }
 #ifdef BEACON_ID

@@ -214,24 +214,24 @@ int main()
             uint8_t code = getCode();
             rfMute(1);
             switch(code){
-                case DTMF_USER_DIGIT: // User control
+                case USER_CONTROL: // User control
                 if (!myrpt->allow_c || cc != 1) // Is user control enabled?
                     break;
                 for (int i = 0; i < 12; i++){ // 3 seconds is enough
                     sleep_ms(250);
                     switch (getCode()){
-                        case DTMF_USER_DIGIT: // User hasn't entered anything so do nothing
+                        case USER_CONTROL: // User hasn't entered anything so do nothing
                         break;
-                        case 1: // User has requested ID
+                        case REQUEST_ID: // User has requested ID
                         ack(myrpt);
                         sleep_ms(100);
                         id(myrpt);
                         break;
-                        case 2: // User has requested normal hangtime
+                        case NORMAL_HANG: // User has requested normal hangtime
                         ack(myrpt);
                         myrpt->hangTime=HANGTIME;
                         break;
-                        case 3: // User has requested short hangtime
+                        case ALT_HANG: // User has requested short hangtime
                         ack(myrpt);
                         myrpt->hangTime=HANGTIME/4;
                         default:
@@ -268,19 +268,19 @@ int main()
                     sleep_ms(3000);
                     ids(".--.", myrpt->cw_freq);
                     switch(input[3]){
-                        case 1: // Disable/Enable user commands
+                        case ENABLE_USER_COMMANDS: // Disable/Enable user commands
                         myrpt->allow_c=input[4];
                         ids("..-", myrpt->cw_freq);
                         break;
-                        case 2: // Disable/Enable repeater transmitter
+                        case ENABLE_TRANSMITTER: // Disable/Enable repeater transmitter
                         myrpt->enabled=input[4];
                         ids("..--..", myrpt->cw_freq);
                         break;
-                        case 3:
+                        case ENABLE_RECEIVER_PROTECTED:
                         myrpt->receiver_protected=input[4]; // Disable/Enable repeater protected receiver
                         ids(".--.", myrpt->cw_freq);
                         break;
-                        case 4:
+                        case ENABLE_REPEATER_TIMEOUT:
                         myrpt->timeout_enabled=input[4]; // Disable/Enable repeater timeout
                         ids("---", myrpt->cw_freq);
                         break;

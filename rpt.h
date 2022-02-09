@@ -1,3 +1,18 @@
+typedef enum dtmf_uc{
+    USER_CONTROL,
+    REQUEST_ID,
+    NORMAL_HANG,
+    ALT_HANG
+};
+
+typedef enum dtmf_kc{
+    ENABLE_USER_COMMANDS = 1,
+    ENABLE_TRANSMITTER,
+    ENABLE_RECEIVER_PROTECTED,
+    ENABLE_REPEATER_TIMEOUT
+};
+
+
 typedef struct counters{
     uint64_t hang_c; // Hangtime
     uint64_t latch_c; // Latch

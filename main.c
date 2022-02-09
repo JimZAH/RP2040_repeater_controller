@@ -14,7 +14,7 @@ bool id_time(struct repeating_timer *t){
 
 void id(rpt *myrpt){
     mustid = false;
-    if (!myrpt->tx){
+    if (!myrpt->tx && myrpt->enabled){
         tx(myrpt->tx = 1);
         sleep_ms(500);
     }
@@ -82,6 +82,12 @@ void printDebug(char* message, int data){
     return;
 }
 
+void ack(rpt *myrpt){ // Send "C" to let user know the command was received.
+    sleep_ms(250);
+    ids("-.-.", myrpt->cw_freq);
+    myrpt->ack_c = 1;
+}
+
 int main()
 {
 #ifdef DEBUG
@@ -96,25 +102,25 @@ int main()
     rpt Rpt;
     rpt *myrpt = &Rpt;
 
+    myrpt->ack_c = 0;
+    myrpt->allow_c = 1;
     myrpt->courtesy_freq=COURTESY_TONE_FREQ;
     myrpt->clid = 0;
     myrpt->cw_freq=CW_BEACON_FREQ;
+    myrpt->enabled=1;
     myrpt->hangTime=HANGTIME;
     myrpt->idle=1;
     myrpt->latchTime=LATCHTIME;
     myrpt->mode=MODE;
     myrpt->sampleTime=SAMPLETIME;
+    myrpt->timeout_enabled = 1;
     myrpt->timeOut=TIMEOUT;
     myrpt->tt = 0;
     tx(myrpt->tx = 0);
     myrpt->receiver_protected = 0;
     myrpt->rx = 0;
     my_c->latch_c=0;
-#ifdef CLOSEDOWN_ID
     my_c->tail_c=TAIL_ID;
-#else
-    my_c->tail_c=0;
-#endif
 
     struct repeating_timer timer;
     add_repeating_timer_ms(ID, id_time, NULL, &timer); // Setup ID timer
@@ -179,7 +185,8 @@ int main()
             my_c->sample_c = time_us_64();
             my_c->timeOut_c = my_c->sample_c;
             myrpt->tt = 1;
-            tx(myrpt->tx = 1);
+            if (myrpt->enabled)
+                tx(myrpt->tx = 1);
             rfMute(0);
         }
         
@@ -187,7 +194,8 @@ int main()
             my_c->hang_c = 0;
             my_c->timeOut_c = time_us_64();
             myrpt->tt = 1;
-            tx(myrpt->tx = 1);
+            if (myrpt->enabled)
+                tx(myrpt->tx = 1);
             myrpt->latch = 1;
             extMute(0);
         }
@@ -203,9 +211,39 @@ int main()
         if (dtmfDetect() && myrpt->rx){
             cc++;
             printDebug("DTMF Detect line\n", 0);
-            uint8_t code = gpio_get_all() & DTMF_MASK;
+            uint8_t code = getCode();
             rfMute(1);
             switch(code){
+                case USER_CONTROL: // User control
+                if (!myrpt->allow_c || cc != 1) // Is user control enabled?
+                    break;
+                for (int i = 0; i < 12; i++){ // 3 seconds is enough
+                    sleep_ms(250);
+                    switch (getCode()){
+                        case USER_CONTROL: // User hasn't entered anything so do nothing
+                        break;
+                        case REQUEST_ID: // User has requested ID
+                        ack(myrpt);
+                        sleep_ms(100);
+                        id(myrpt);
+                        break;
+                        case NORMAL_HANG: // User has requested normal hangtime
+                        ack(myrpt);
+                        myrpt->hangTime=HANGTIME;
+                        break;
+                        case ALT_HANG: // User has requested short hangtime
+                        ack(myrpt);
+                        myrpt->hangTime=HANGTIME/4;
+                        default:
+                        break;
+                    }
+                    if (myrpt->ack_c){ // Break out if we received a command
+                        myrpt->ack_c = 0;
+                        break;
+                    }
+                }
+                cc=0;
+                break;
                 case DTMF_ALLSTAR_START:
                 cc=0;
                 break;
@@ -215,13 +253,11 @@ int main()
                     input[i] = 0;
                 }
                 break;
-                case 8:
-                id(myrpt);
-                break;
                 default:
                 input[cc-1] = code;
+                break;
             }
-            if (cc >= 6) {
+            if (cc >= 5) {
                 int pass = 0;
                 for (int i = 0; i < 3; i++){
                     printf("%d", input[i]);
@@ -229,12 +265,24 @@ int main()
                     pass = pass + input[i];
                 }
                 if (pass == PASSCODE){
-                    ids(".--.", 1000);
-                    sleep_ms(1000);
+                    sleep_ms(3000);
+                    ids(".--.", myrpt->cw_freq);
                     switch(input[3]){
-                        case 1:
-                        myrpt->cw_freq=400;
-                        id(myrpt);
+                        case ENABLE_USER_COMMANDS: // Disable/Enable user commands
+                        myrpt->allow_c=input[4];
+                        ids("..-", myrpt->cw_freq);
+                        break;
+                        case ENABLE_TRANSMITTER: // Disable/Enable repeater transmitter
+                        myrpt->enabled=input[4];
+                        ids("..--..", myrpt->cw_freq);
+                        break;
+                        case ENABLE_RECEIVER_PROTECTED:
+                        myrpt->receiver_protected=input[4]; // Disable/Enable repeater protected receiver
+                        ids(".--.", myrpt->cw_freq);
+                        break;
+                        case ENABLE_REPEATER_TIMEOUT:
+                        myrpt->timeout_enabled=input[4]; // Disable/Enable repeater timeout
+                        ids("---", myrpt->cw_freq);
                         break;
                         default:
                         break;
@@ -260,7 +308,7 @@ int main()
             myrpt->rssi = adc_read();
         }
 
-        if ((myrpt->rx || myrpt->ext_rx) && time_us_64() - my_c->timeOut_c >= myrpt->timeOut){ // TIMEOUT
+        if ((myrpt->rx || myrpt->ext_rx) && time_us_64() - my_c->timeOut_c >= myrpt->timeOut && myrpt->timeout_enabled){ // TIMEOUT
             rfMute(1);
             if(myrpt->tx)
                 ids(".-.-.-.-.-.-.-.-.-.-", 400);

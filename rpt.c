@@ -1,10 +1,10 @@
 #include "rpt.h"
 
-int getCode(){
+int getCode(){ // Get DTMF digit
     return gpio_get_all() & DTMF_MASK;
 }
 
-void getState(rpt *myrpt){
+void getState(rpt *myrpt){ // Check the repeater input states
     myrpt->ctcss_decode = ctcssDetect();
     myrpt->rx = rx();
     myrpt->ext_rx = extRx();

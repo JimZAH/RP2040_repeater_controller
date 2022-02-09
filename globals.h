@@ -30,7 +30,7 @@ char* morse[6] = {"--.","-...","...--","...-",".--", "-.."};
 
 // RSSI
 #define RSSI_LOW 380 // RSSI LOW SIGNAL
-#define RSSI_HIGH 440 // RSSI HIGH SIGNAL
+#define RSSI_HIGH 425 // RSSI HIGH SIGNAL
 
 // Time
 #define HANGTIME 4000000ULL

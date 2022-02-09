@@ -12,3 +12,15 @@
 
 ### Why would you do this when there's other options for repeater controllers?
 **It's simple, sometimes you need something unique and need to roll your own**
+
+### What features does this controller have so far?
+- [ ] Advanced Allstar-Asterisk intergration
+- [x] CTCSS decode input (External tone decoder required)
+- [x] DTMF control
+- [x] Internet gateway
+- [x] Morse code beacon ID
+- [x] RSSI courtesy tone reports
+- [ ] Serial interface
+- [ ] Speech
+- [x] Timeout
+- [x] Toneburst decode input (NE567 required)

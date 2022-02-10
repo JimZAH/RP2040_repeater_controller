@@ -2,11 +2,10 @@
 #define DEBUG
 #define DTMF_ALLSTAR_START 0xB
 #define DTMF_RESET_DIGIT 0xC
-#define MODE 5 // RX mode. 0 Carrier only, 1 CTCSS or toneburst, 2 CTCSS, 3 Toneburst, 4 same as 0 with gateway, 5, same as 1 with gateway, 6 same as 2 with gateway, 7, same as 3 with gateway
+#define MODE 1 // RX mode. 0 Carrier only, 1 CTCSS or toneburst, 2 CTCSS, 3 Toneburst, 4 same as 0 with gateway, 5, same as 1 with gateway, 6 same as 2 with gateway, 7, same as 3 with gateway
 #define PASSCODE 123
 
 // ID
-#define BEACON_ID //Uncomment to enable BEACON ID
 #define COURTESY_TONE_FREQ 720
 #define CW_BEACON_FREQ 800 //CW tone frequency for periodic beacon
 #define CW_CLOSEDOWN_FREQ 680 //CW tone frequency for closedown ID
@@ -32,8 +31,8 @@ char* morse[6] = {"--.","-...","...--","...-",".--", "-.."};
 #define RSSI_HIGH 425 // RSSI HIGH SIGNAL
 
 // Time
-#define HANGTIME 4000000ULL
-#define ID 900000
+#define HANGTIME 5000000ULL
+#define ID 800000
 #define LATCHTIME 2000000ULL
 #define SAMPLETIME 2000000ULL
 #define TIMEOUT 300000000ULL

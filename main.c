@@ -54,23 +54,60 @@ void idm(char c, int tone){
   sleep_ms(dit);
 }
 
-char* overTone(rpt *myrpt){
-
-    switch(myrpt->receiverId){
-        case 1: // CTCSS
+void overTone(rpt *myrpt){
+    switch (myrpt->courtesy_select){
+        case 0xA:
+        switch(myrpt->receiverId){
+            case 1: // CTCSS
             if (myrpt->rssi >= RSSI_HIGH) {
-              return "-";
-            if (myrpt->rssi <= RSSI_LOW) {
-              return "..";
-              }
+                ids("...", myrpt->courtesy_freq);
+            } else if (myrpt->rssi <= RSSI_LOW) {
+                ids(".", myrpt->courtesy_freq);
+            } else {
+                ids("..", myrpt->courtesy_freq);
             }
-            return "...";
-        case 2: // Internet
-            return "-.-";
-        case 3: // No CTCSS / TB
-            return "-..";
+            break;
+            case 2: // Internet
+            ids("-.-", myrpt->courtesy_freq);
+            break;
+            case 3: // No CTCSS / TB
+            ids("-..", myrpt->courtesy_freq);
+            break;
+            default:
+            ids(".", myrpt->courtesy_freq);
+        }
+        break;
+        case 0x1:
+        switch(myrpt->receiverId){
+            case 1: // CTCSS
+            for (int i = 0; i <= 1000; i++){
+                set_pwm_pin(PIP,1100,2000-i*2);
+                sleep_ms(1);
+                if(rx()){
+                    set_pwm_pin(PIP,0,0);
+                    break;
+                    }
+                }
+            break;
+            case 2: // Internet
+            ids("-.-", myrpt->courtesy_freq);
+            break;
+            case 3: // No CTCSS / TB
+            for (int i = 0; i <= 500; i++){
+                set_pwm_pin(PIP,900,2000-i*4);
+                sleep_ms(2);
+                if(rx()){
+                    set_pwm_pin(PIP,0,0);
+                    break;
+                    }
+                }            
+            break;
+            default:
+            ids(".", myrpt->courtesy_freq);
+        }
+        break;
         default:
-            return ".";
+        break;
     }
     
 }
@@ -104,7 +141,9 @@ int main()
 
     myrpt->ack_c = 0;
     myrpt->allow_c = 1;
+    myrpt->beacon_id = 1;
     myrpt->courtesy_freq=COURTESY_TONE_FREQ;
+    myrpt->courtesy_select = 0x1;
     myrpt->clid = 0;
     myrpt->cw_freq=CW_BEACON_FREQ;
     myrpt->enabled=1;
@@ -113,6 +152,7 @@ int main()
     myrpt->latchTime=LATCHTIME;
     myrpt->mode=MODE;
     myrpt->sampleTime=SAMPLETIME;
+    myrpt->tail_pips = 0;
     myrpt->timeout_enabled = 1;
     myrpt->timeOut=TIMEOUT;
     myrpt->tt = 0;
@@ -121,6 +161,7 @@ int main()
     myrpt->rx = 0;
     my_c->latch_c=0;
     my_c->tail_c=TAIL_ID;
+    my_c->tail_pips=0;
 
     struct repeating_timer timer;
     add_repeating_timer_ms(ID, id_time, NULL, &timer); // Setup ID timer
@@ -214,13 +255,13 @@ int main()
             uint8_t code = getCode();
             rfMute(1);
             switch(code){
-                case USER_CONTROL: // User control
+                case 0xA: // User control
                 if (!myrpt->allow_c || cc != 1) // Is user control enabled?
                     break;
                 for (int i = 0; i < 12; i++){ // 3 seconds is enough
                     sleep_ms(250);
                     switch (getCode()){
-                        case USER_CONTROL: // User hasn't entered anything so do nothing
+                        case 0xA: // User hasn't entered anything so do nothing
                         break;
                         case REQUEST_ID: // User has requested ID
                         ack(myrpt);
@@ -257,14 +298,17 @@ int main()
                 input[cc-1] = code;
                 break;
             }
-            if (cc >= 5) {
+            if (cc >= 6) {
                 int pass = 0;
                 for (int i = 0; i < 3; i++){
-                    printf("%d", input[i]);
+                    printf("%d\n", input[i]);
                     pass = pass * 10;
                     pass = pass + input[i];
                 }
                 if (pass == PASSCODE){
+                    for (int j = 0; j < 5; j++){
+                        printf("FULL: AP: %d, VAL: %d\n", j, input[j]);
+                    }
                     sleep_ms(3000);
                     ids(".--.", myrpt->cw_freq);
                     switch(input[3]){
@@ -274,6 +318,9 @@ int main()
                         break;
                         case ENABLE_TRANSMITTER: // Disable/Enable repeater transmitter
                         myrpt->enabled=input[4];
+                        if (!myrpt->tx)
+                            tx(myrpt->tx = 1);
+                        sleep_ms(1000);
                         ids("..--..", myrpt->cw_freq);
                         break;
                         case ENABLE_RECEIVER_PROTECTED:
@@ -284,6 +331,18 @@ int main()
                         myrpt->timeout_enabled=input[4]; // Disable/Enable repeater timeout
                         ids("---", myrpt->cw_freq);
                         break;
+                        case ENABLE_TAIL_PIPS:
+                        myrpt->tail_pips=input[4]; // Disable/Enable tail pips
+                        ids("...", myrpt->cw_freq);
+                        break;
+                        case ENABLE_BEACON_ID:
+                        myrpt->beacon_id=input[4]; // Disable/Enable beacon ID
+                        ids("-...", myrpt->cw_freq);
+                        break;
+                        case COURTESY_TONE_SELECT:
+                        myrpt->courtesy_select=input[4]; // Courtesy tone select
+                        ids("-", myrpt->cw_freq);
+                        break;
                         default:
                         break;
                     }
@@ -291,7 +350,7 @@ int main()
                 cc = 0;
             }
             printf("DTMF: %d\n", code);
-            sleep_ms(1000);
+            sleep_ms(250);
             rfMute(0);
         }
 
@@ -322,7 +381,10 @@ int main()
             if (myrpt->latch){
                 if (time_us_64() - my_c->hang_c <= 500 && time_us_64() - my_c->timeOut_c >= myrpt->sampleTime){
                     sleep_ms(750);
-                    ids(overTone(myrpt), myrpt->courtesy_freq);
+                    overTone(myrpt);
+                } else if (myrpt->tail_pips && time_us_64() - my_c->hang_c > 2000000ULL && time_us_64() - my_c->tail_pips >= myrpt->sampleTime/2){
+                    ids(".", myrpt->courtesy_freq-200);
+                    my_c->tail_pips = time_us_64();
                 }
                 if (time_us_64() - my_c->hang_c >= myrpt->hangTime){
                     if (my_c->tail_c >= TAIL_ID-1){
@@ -343,13 +405,13 @@ int main()
                 my_c->tail_c++;
             }
         }
-#ifdef BEACON_ID
-        if(mustid) // Check if we must ID
+
+        if(mustid && myrpt->beacon_id) // Check if we must ID
             id(myrpt);
-#else
-        if(mustid && myrpt->tx) // Check if we must ID and in transmit mode
+        else if (mustid && myrpt->tx)
             id(myrpt);
-#endif
+
+
         getState(myrpt);
     }
     return 0;

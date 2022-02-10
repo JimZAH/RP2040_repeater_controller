@@ -9,7 +9,10 @@ typedef enum dtmf_kc{
     ENABLE_USER_COMMANDS = 1,
     ENABLE_TRANSMITTER,
     ENABLE_RECEIVER_PROTECTED,
-    ENABLE_REPEATER_TIMEOUT
+    ENABLE_REPEATER_TIMEOUT,
+    ENABLE_TAIL_PIPS,
+    ENABLE_BEACON_ID,
+    COURTESY_TONE_SELECT
 };
 
 
@@ -18,6 +21,7 @@ typedef struct counters{
     uint64_t latch_c; // Latch
     uint64_t sample_c; // RSSI sample
     uint8_t tail_c; // Tail message (ID)
+    uint64_t tail_pips; // Tail pips
     uint64_t timeOut_c; // Timeout
 }counter;
 
@@ -25,7 +29,9 @@ typedef struct counters{
 typedef struct repeater{
     bool ack_c; // Command ACK flag
     bool allow_c; // User control enable flag
+    bool beacon_id;
     uint courtesy_freq;
+    uint courtesy_select;
     bool clid; // Close down ID flag
     bool ctcss_decode;
     uint cw_freq;
@@ -44,6 +50,7 @@ typedef struct repeater{
     uint64_t sampleTime;
     bool tt;
     bool tx;
+    bool tail_pips;
     uint64_t timeOut;
     bool tb; // Tone burst
     bool timeout_enabled;

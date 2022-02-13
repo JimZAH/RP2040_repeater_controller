@@ -358,8 +358,10 @@ int main()
             myrpt->tt = 0;
             if (myrpt->receiver_protected)
                 myrpt->idle = 1;
+#ifdef MUTE_ON_COS
             rfMute(1);
             extMute(1);
+#endif
         }
 
         if (myrpt->latch && myrpt->rx && time_us_64() - my_c->sample_c >= myrpt->sampleTime){

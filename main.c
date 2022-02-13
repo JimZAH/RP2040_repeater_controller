@@ -254,6 +254,7 @@ int main()
             printDebug("DTMF Detect line\n", 0);
             uint8_t code = getCode();
             rfMute(1);
+            ids("--", myrpt->cw_freq);
             switch(code){
                 case 0xA: // User control
                 if (!myrpt->allow_c || cc != 1) // Is user control enabled?

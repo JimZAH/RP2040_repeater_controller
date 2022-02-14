@@ -256,13 +256,13 @@ int main()
             rfMute(1);
             ids("--", myrpt->cw_freq);
             switch(code){
-                case 0xA: // User control
+                case USER_CONTROL: // User control
                 if (!myrpt->allow_c || cc != 1) // Is user control enabled?
                     break;
                 for (int i = 0; i < 12; i++){ // 3 seconds is enough
                     sleep_ms(250);
                     switch (getCode()){
-                        case 0xA: // User hasn't entered anything so do nothing
+                        case USER_CONTROL: // User hasn't entered anything so do nothing
                         break;
                         case REQUEST_ID: // User has requested ID
                         ack(myrpt);

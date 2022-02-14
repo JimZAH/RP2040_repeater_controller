@@ -1,8 +1,8 @@
 typedef enum dtmf_uc{
-    USER_CONTROL,
-    REQUEST_ID,
+    REQUEST_ID = 1,
     NORMAL_HANG,
-    ALT_HANG
+    ALT_HANG,
+    USER_CONTROL = 10
 };
 
 typedef enum dtmf_kc{

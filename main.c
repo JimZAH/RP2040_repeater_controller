@@ -7,12 +7,12 @@
 
 volatile bool mustid = false;
 
-bool id_time(struct repeating_timer *t){
+bool id_time(struct repeating_timer *t){ // ID timer
     mustid = true;
     return true;
 }
 
-void id(rpt *myrpt){
+void id(rpt *myrpt){ // ID routine
     mustid = false;
     if (!myrpt->tx && myrpt->enabled){
         tx(myrpt->tx = 1);
@@ -54,10 +54,10 @@ void idm(char c, int tone){
   sleep_ms(dit);
 }
 
-void overTone(rpt *myrpt){
+void overTone(rpt *myrpt){ // Courtesy tone 
     switch (myrpt->courtesy_select){
         case 0xA:
-        switch(myrpt->receiverId){
+        switch(myrpt->receiverId){ // RSSI courtesy tones
             case 1: // CTCSS
             if (myrpt->rssi >= RSSI_HIGH) {
                 ids("...", myrpt->courtesy_freq);
@@ -78,7 +78,7 @@ void overTone(rpt *myrpt){
         }
         break;
         case 0x1:
-        switch(myrpt->receiverId){
+        switch(myrpt->receiverId){ // Ringing courtesy tones
             case 1: // CTCSS
             for (int i = 0; i <= 1000; i++){
                 set_pwm_pin(PIP,1100,2000-i*2);
@@ -112,7 +112,7 @@ void overTone(rpt *myrpt){
     
 }
 
-void printDebug(char* message, int data){
+void printDebug(char* message, int data){ // Serial debug output
 #ifdef DEBUG
     printf(message, data);
 #endif
@@ -130,8 +130,8 @@ int main()
 #ifdef DEBUG
     stdio_init_all();
 #endif
-    rfMute(1);
-    extMute(1);
+    rfMute(1); // Mute audio path
+    extMute(1); // Mute aux input
     int cc = 0; // DTMF counter
     uint8_t input[10] = {0}; // DTMF command store
     counter Rpt_c;
@@ -166,23 +166,23 @@ int main()
     struct repeating_timer timer;
     add_repeating_timer_ms(ID, id_time, NULL, &timer); // Setup ID timer
 
-    for (int i = 0; i <= sizeof(pins_num)/sizeof(pins_num[0]); i++){
+    for (int i = 0; i <= sizeof(pins_num)/sizeof(pins_num[0]); i++){ // Init GPIO
         gpio_init(pins_num[i]);
     }
     
-    for (int i = 0; i <= sizeof(dir_num)/sizeof(dir_num[0]); i++){
+    for (int i = 0; i <= sizeof(dir_num)/sizeof(dir_num[0]); i++){ // Set GPIO direction
         gpio_set_dir(dir_num[i][0], dir_num[i][1]);
     }
 
-    adc_init();
+    adc_init(); // Setup ADC for RSSI sampling
     adc_gpio_init(RSSI);
     adc_select_input(0);
 
-    id(myrpt);
+    id(myrpt); // Send ID on boot
 
     while (1){
 
-        if (myrpt->idle || myrpt->receiver_protected){
+        if (myrpt->idle || myrpt->receiver_protected){ // Repeater mode selection
             switch(myrpt->mode){
             case 0: // carrier only
             if (myrpt->rx)
@@ -231,7 +231,7 @@ int main()
             rfMute(0);
         }
         
-        if (myrpt->ext_rx && !myrpt->idle && !myrpt->tt){
+        if (myrpt->ext_rx && !myrpt->idle && !myrpt->tt){ // If a signal is present on AUX input
             my_c->hang_c = 0;
             my_c->timeOut_c = time_us_64();
             myrpt->tt = 1;
@@ -249,20 +249,20 @@ int main()
             my_c->latch_c = 0;
         }
 
-        if (dtmfDetect() && myrpt->rx){
+        if (dtmfDetect() && myrpt->rx){ // DTMF decode
             cc++;
             printDebug("DTMF Detect line\n", 0);
             uint8_t code = getCode();
             rfMute(1);
             ids("--", myrpt->cw_freq);
             switch(code){
-                case 0xA: // User control
+                case USER_CONTROL: // User control
                 if (!myrpt->allow_c || cc != 1) // Is user control enabled?
                     break;
                 for (int i = 0; i < 12; i++){ // 3 seconds is enough
                     sleep_ms(250);
                     switch (getCode()){
-                        case 0xA: // User hasn't entered anything so do nothing
+                        case USER_CONTROL: // User hasn't entered anything so do nothing
                         break;
                         case REQUEST_ID: // User has requested ID
                         ack(myrpt);
@@ -306,9 +306,9 @@ int main()
                     pass = pass * 10;
                     pass = pass + input[i];
                 }
-                if (pass == PASSCODE){
+                if (pass == PASSCODE){ // DTMF admin mode
                     for (int j = 0; j < 5; j++){
-                        printf("FULL: AP: %d, VAL: %d\n", j, input[j]);
+                        printf("FULL: AP: %d, VAL: %d\n", j, input[j]); // Print command over serial
                     }
                     sleep_ms(3000);
                     ids(".--.", myrpt->cw_freq);
@@ -365,7 +365,7 @@ int main()
 #endif
         }
 
-        if (myrpt->latch && myrpt->rx && time_us_64() - my_c->sample_c >= myrpt->sampleTime){
+        if (myrpt->latch && myrpt->rx && time_us_64() - my_c->sample_c >= myrpt->sampleTime){ // Sample RSSI input
             my_c->sample_c = time_us_64();
             myrpt->rssi = adc_read();
         }
@@ -415,7 +415,7 @@ int main()
             id(myrpt);
 
 
-        getState(myrpt);
+        getState(myrpt); // Check input states
     }
     return 0;
 }

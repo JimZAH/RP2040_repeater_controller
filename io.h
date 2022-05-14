@@ -8,6 +8,8 @@
 #define CTCSS_ENCODE 10
 #define EXT_RX 7
 #define EXT_PTT 8
+#define UART_TX 16
+#define UART_RX 17
 #define LAMP_TX 18
 #define LAMP_SQL 19
 #define LAMP_CTCSS_DECODE 20
@@ -24,7 +26,7 @@
 //MASKS
 #define DTMF_MASK 0xF
 
-int pins_num[22] = {
+int pins_num[24] = {
     D0,
     D1,
     D2,
@@ -35,6 +37,8 @@ int pins_num[22] = {
     CTCSS_ENCODE,
     EXT_RX,
     EXT_PTT,
+    UART_TX,
+    UART_RX,
     LAMP_TX,
     LAMP_SQL,
     LAMP_CTCSS_DECODE,
@@ -49,7 +53,7 @@ int pins_num[22] = {
     TONE_BURST
 };
 
-int dir_num[22][2] = {
+int dir_num[24][2] = {
     {D0, GPIO_IN},
     {D1, GPIO_IN},
     {D2, GPIO_IN},
@@ -60,6 +64,8 @@ int dir_num[22][2] = {
     {CTCSS_ENCODE, GPIO_OUT},
     {EXT_RX, GPIO_IN},
     {EXT_PTT, GPIO_OUT},
+    {UART_TX, GPIO_FUNC_UART},
+    {UART_RX, GPIO_FUNC_UART},
     {LAMP_TX, GPIO_OUT},
     {LAMP_SQL, GPIO_OUT},
     {LAMP_CTCSS_DECODE, GPIO_OUT},

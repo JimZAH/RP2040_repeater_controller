@@ -4,6 +4,7 @@
 #include "globals.h"
 #include "io.c"
 #include "rpt.c"
+#include "serial.h"
 
 volatile bool mustid = false;
 
@@ -130,6 +131,9 @@ int main()
 #ifdef DEBUG
     stdio_init_all();
 #endif
+    
+    uart_init(uart0, 115200);
+
     rfMute(1); // Mute audio path
     extMute(1); // Mute aux input
     int cc = 0; // DTMF counter
@@ -166,11 +170,11 @@ int main()
     struct repeating_timer timer;
     add_repeating_timer_ms(ID, id_time, NULL, &timer); // Setup ID timer
 
-    for (int i = 0; i <= sizeof(pins_num)/sizeof(pins_num[0]); i++){ // Init GPIO
+    for (int i = 0; i < sizeof(pins_num)/sizeof(pins_num[0]); i++){ // Init GPIO
         gpio_init(pins_num[i]);
     }
     
-    for (int i = 0; i <= sizeof(dir_num)/sizeof(dir_num[0]); i++){ // Set GPIO direction
+    for (int i = 0; i < sizeof(dir_num)/sizeof(dir_num[0]); i++){ // Set GPIO direction
         gpio_set_dir(dir_num[i][0], dir_num[i][1]);
     }
 
@@ -178,10 +182,12 @@ int main()
     adc_gpio_init(RSSI);
     adc_select_input(0);
 
+    // Send boot message to host
+    usend(boot_msg);
+
     id(myrpt); // Send ID on boot
 
     while (1){
-
         if (myrpt->idle || myrpt->receiver_protected){ // Repeater mode selection
             switch(myrpt->mode){
             case 0: // carrier only
